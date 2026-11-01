@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  transpilePackages: ["@tiktim/db", "@tiktim/shared"],
   turbopack: {
     rules: {
       "*.css": {

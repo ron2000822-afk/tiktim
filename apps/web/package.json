@@ -11,6 +11,11 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.46.0",
+    "@tiktim/db": "workspace:*",
+    "@tiktim/shared": "workspace:*",
+    "drizzle-orm": "^0.36.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"

@@ -1,0 +1,48 @@
+export const ADMIN_COPY = {
+  login: {
+    title: "התחברות למערכת הניהול",
+    subtitle: "גישה לבעלי הרשאה בלבד",
+    button: "התחברות עם Google",
+    error: "ההתחברות נכשלה, נסו שוב.",
+  },
+  denied: {
+    title: "אין לך הרשאה",
+    body: "המשתמש שהתחברת איתו אינו מורשה לגשת לפאנל הניהול.",
+    signOut: "התנתקות",
+  },
+  nav: {
+    dashboard: "לוח בקרה",
+    events: "הופעות",
+    artists: "אמנים",
+    venues: "אולמות",
+    signOut: "התנתקות",
+  },
+  dashboard: {
+    title: "לוח בקרה",
+  },
+  events: {
+    title: "הופעות",
+    searchPlaceholder: "חיפוש לפי שם הופעה...",
+    searchButton: "חיפוש",
+    columns: { title: "שם", venue: "אולם", city: "עיר", date: "תאריך", status: "סטטוס", featured: "מומלץ" },
+    featureOn: "סמן כמומלץ",
+    featureOff: "הסר המלצה",
+    empty: "לא נמצאו הופעות.",
+  },
+  artists: {
+    title: "אמנים",
+    searchPlaceholder: "חיפוש לפי שם אמן...",
+    searchButton: "חיפוש",
+    columns: { name: "שם", genre: "ז'אנר", international: "בינלאומי" },
+    editGenre: "עריכת ז'אנר",
+    save: "שמירה",
+    empty: "לא נמצאו אמנים.",
+  },
+  venues: {
+    title: "אולמות",
+    searchPlaceholder: "חיפוש לפי שם אולם...",
+    searchButton: "חיפוש",
+    columns: { name: "שם", city: "עיר", type: "סוג" },
+    empty: "לא נמצאו אולמות.",
+  },
+} as const;
