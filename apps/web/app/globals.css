@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0b10;
+  --surface: #15151d;
+  --surface-2: #1e1e29;
+  --text: #f5f5f7;
+  --text-muted: #a1a1b0;
+  --border: #2a2a38;
+
+  --accent: #ff3d7f;
+  --accent-gradient-from: #ff2e93;
+  --accent-gradient-to: #ff7a1a;
+
+  --status-sold-out: #6b6b7b;
+  --status-few-left: #ffb020;
+  --status-new: #3ddc97;
+  --status-cancelled: #ff5a5a;
+
+  --genre-rock: #e5484d;
+  --genre-pop: #ff3d7f;
+  --genre-mizrahit: #f5a524;
+  --genre-hiphop: #8e4ec6;
+  --genre-indie: #12a594;
+  --genre-electronic: #3e63dd;
+  --genre-jazz: #b08a57;
+  --genre-standup: #f76b15;
+
+  --radius-card: 16px;
+  --radius-button: 12px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-heebo);
+
+  --radius-card: var(--radius-card);
+  --radius-button: var(--radius-button);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  line-height: 1.4;
+}

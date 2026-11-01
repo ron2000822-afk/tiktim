@@ -1,0 +1,20 @@
+node_modules/
+.turbo/
+dist/
+.next/
+out/
+build/
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+.vercel/
+tiktim-spec.zip
+
+# Screenshots dropped into docs/ sometimes contain secrets (e.g. Supabase DB password) — never auto-commit them.
+docs/Screenshot*.png
+docs/*screenshot*

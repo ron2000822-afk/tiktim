@@ -1,0 +1,66 @@
+{
+  "categories": [
+    {
+      "slug": "music",
+      "name_he": "מוזיקה",
+      "is_active": true,
+      "genres": [
+        { "slug": "pop", "name_he": "פופ ישראלי" },
+        { "slug": "rock", "name_he": "רוק" },
+        { "slug": "mizrahit", "name_he": "מזרחית וים תיכונית" },
+        { "slug": "hiphop", "name_he": "היפ הופ וראפ" },
+        { "slug": "indie", "name_he": "אינדי ואלטרנטיבי" },
+        { "slug": "electronic", "name_he": "אלקטרוני" },
+        { "slug": "jazz", "name_he": "ג'אז" },
+        { "slug": "soul", "name_he": "סול, פאנק ובלוז" },
+        { "slug": "metal", "name_he": "מטאל ופאנק רוק" },
+        { "slug": "nostalgia", "name_he": "זמר עברי ונוסטלגיה" },
+        { "slug": "jewish", "name_he": "מוזיקה יהודית וחסידית" },
+        { "slug": "folk", "name_he": "פולק ואקוסטי" },
+        { "slug": "world", "name_he": "מוזיקת עולם" },
+        { "slug": "classical", "name_he": "קלאסית" },
+        { "slug": "tribute", "name_he": "מופעי מחווה" }
+      ]
+    },
+    {
+      "slug": "standup",
+      "name_he": "סטנדאפ",
+      "is_active": true,
+      "genres": [
+        { "slug": "solo", "name_he": "מופע יחיד" },
+        { "slug": "lineup", "name_he": "ערב סטנדאפ" },
+        { "slug": "open-mic", "name_he": "אופן מייק" }
+      ]
+    },
+    { "slug": "theater", "name_he": "הצגות", "is_active": false, "genres": [] },
+    { "slug": "kids", "name_he": "הצגות ילדים", "is_active": false, "genres": [] },
+    { "slug": "lectures", "name_he": "הרצאות", "is_active": false, "genres": [] },
+    { "slug": "parties", "name_he": "מסיבות", "is_active": false, "genres": [] }
+  ],
+  "tags": [
+    { "slug": "international", "name_he": "הופעות חו\"ל בישראל" },
+    { "slug": "festival", "name_he": "פסטיבל" },
+    { "slug": "outdoor", "name_he": "בחוץ" },
+    { "slug": "free", "name_he": "חינם" },
+    { "slug": "english", "name_he": "בשפה האנגלית" },
+    { "slug": "accessible", "name_he": "מקום נגיש" }
+  ],
+  "regions": [
+    { "slug": "tel-aviv", "name_he": "תל אביב-יפו" },
+    { "slug": "gush-dan", "name_he": "גוש דן" },
+    { "slug": "sharon", "name_he": "השרון" },
+    { "slug": "jerusalem", "name_he": "ירושלים והסביבה" },
+    { "slug": "shfela", "name_he": "השפלה" },
+    { "slug": "haifa", "name_he": "חיפה והקריות" },
+    { "slug": "north", "name_he": "הצפון" },
+    { "slug": "south", "name_he": "הדרום" },
+    { "slug": "eilat", "name_he": "אילת" }
+  ],
+  "time_filters": [
+    { "slug": "today", "name_he": "היום" },
+    { "slug": "tomorrow", "name_he": "מחר" },
+    { "slug": "weekend", "name_he": "סופ\"ש", "rule": "Thursday 00:00 to Saturday 23:59, Asia/Jerusalem" },
+    { "slug": "this-week", "name_he": "השבוע", "rule": "today through Saturday 23:59" },
+    { "slug": "this-month", "name_he": "החודש" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "tiktim",
+  "private": true,
+  "packageManager": "pnpm@10.16.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e --filter=web",
+    "db:generate": "pnpm --filter @tiktim/db db:generate",
+    "db:migrate": "pnpm --filter @tiktim/db db:migrate",
+    "db:seed": "pnpm --filter @tiktim/db db:seed",
+    "ingest": "pnpm --filter @tiktim/ingest start"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
