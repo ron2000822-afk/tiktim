@@ -18,3 +18,5 @@ tiktim-spec.zip
 # Screenshots dropped into docs/ sometimes contain secrets (e.g. Supabase DB password) — never auto-commit them.
 docs/Screenshot*.png
 docs/*screenshot*
+.vercel
+.env*
