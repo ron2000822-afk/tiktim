@@ -88,3 +88,26 @@
 
 **Next**
 - Phase 3: ingestion engine (connector framework, Ticketmaster connector — needs `TICKETMASTER_API_KEY` from the owner — Tier 3 seller-site connectors, matching/dedupe, admin review queue). This is where the site starts filling with real shows instead of seed data.
+
+## 2026-11-02 — Phase 3: Ingestion engine (in progress)
+
+Built continuously per the owner's "run with what you recommend, don't stop" instruction.
+
+**Done so far**
+- `packages/ingest`: `Connector` interface, registry, CLI (`pnpm ingest -- --source=x --dry-run`), Hebrew title parser (`parse-title.ts`, strips venue/lineup filler per `docs/INGESTION.md`'s exact rules), artist/venue resolution with fuzzy matching, artist-match and event-dedup scoring (both pure functions, fully unit tested against the doc's literal worked examples), the 14-step pipeline (`pipeline/run.ts`: fetch → normalize → resolve venue/artist → match event → upsert offer → classify genre (optional Anthropic call) → publish/queue → staleness → report → revalidate).
+- Ticketmaster Discovery API v2 connector (month-windowed paging, category/status/availability mapping, Impact affiliate URL builder), tested against 3 recorded fixtures.
+- Manual connector (admin "הוספת הופעה" form) and producer-submission flow (`/advertise/add-show` → `review_queue` kind `submission`, never auto-published).
+- Admin review queue (`/admin/review`): renders every `review_queue` kind (possible duplicate, unmatched artist, unmatched venue, genre suggestion, submission, low-confidence event) plus open `error_reports` from the public error-report form, each with its real resolve/approve/reject action wired to the DB.
+- Admin ingestion dashboard (`/admin/ingestion`): per-source last-run status/counts table, flags a source whose latest `fetched` count dropped >30% vs. its previous run.
+
+**Two real bugs found via live-DB verification (not just typecheck) and fixed:**
+1. `createUnverifiedArtist`/`createUnverifiedVenue` built slugs from `normalizeHe()` (Hebrew-normalized, not Latin) instead of `slugify()` — produced raw-Hebrew slugs like `זאב-הירש-הבלתי-נודע-...`. Fixed to use `slugify(rawName) || "artist"/"venue"`.
+2. `resolvePossibleDuplicate` (admin merge action) deleted the losing event *after* leaving `review_queue.related_event_id` pointing at it — violated the FK (`restrict`, no cascade) and would have crashed in production the first time two possible-duplicate events were merged. Fixed by repointing any `review_queue` rows referencing the event-to-be-deleted to the surviving event *before* deleting it.
+3. (Caught in code review before it shipped, not via a crash) `approveSubmission` had a fallback `https://example-sellers.test/submission` URL for producer submissions that omitted a ticket link — would have published a fake outbound link. Removed the fallback; the admin UI now only shows "אשר והמר להופעה" when the submission has a real URL, otherwise hints to add the event manually once the producer supplies one.
+
+**Verified:** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` all pass; live-DB script exercised every review-queue action (merge, verify artist, apply genre, publish low-confidence event, resolve error report) and the ingestion-dashboard drop-detection query against the real Supabase instance, then fully cleaned up test data (row counts confirmed back to baseline).
+
+**Next**
+- GitHub Actions scheduled ingestion workflow (every 6h).
+- `SellerSiteConnector` base class + a couple of real Tier 3 example connectors (full 9-source coverage from `docs/INGESTION.md` is a later iteration, not this pass).
+- Final Phase 3 acceptance-criteria verification, then commit.
