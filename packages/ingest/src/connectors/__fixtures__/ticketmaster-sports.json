@@ -1,0 +1,10 @@
+{
+  "id": "sportsEvent1",
+  "name": "Maccabi Tel Aviv vs Hapoel Jerusalem",
+  "url": "https://www.ticketmaster.co.il/event/basketball",
+  "dates": { "start": { "dateTime": "2026-11-20T18:00:00Z" }, "status": { "code": "onsale" } },
+  "classifications": [{ "segment": { "name": "Sports" }, "genre": { "name": "Basketball" } }],
+  "_embedded": {
+    "venues": [{ "name": "Menora Mivtachim Arena", "city": { "name": "Tel Aviv-Yafo" } }]
+  }
+}

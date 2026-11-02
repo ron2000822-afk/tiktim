@@ -1,0 +1,14 @@
+{
+  "id": "comedyEvent1",
+  "name": "Adir Miller Live",
+  "url": "https://www.ticketmaster.co.il/event/adir-miller",
+  "dates": {
+    "start": { "dateTime": "2026-11-15T19:30:00Z" },
+    "status": { "code": "onsale" }
+  },
+  "classifications": [{ "segment": { "name": "Arts & Theatre" }, "genre": { "name": "Comedy" } }],
+  "_embedded": {
+    "venues": [{ "name": "Zappa Herzliya", "city": { "name": "Herzliya" } }],
+    "attractions": [{ "name": "Adir Miller" }]
+  }
+}

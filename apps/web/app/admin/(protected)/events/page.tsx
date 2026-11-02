@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { desc, eq, ilike } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { events, venues, cities } from "@tiktim/db/schema";
@@ -32,7 +33,12 @@ export default async function AdminEventsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{ADMIN_COPY.events.title}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{ADMIN_COPY.events.title}</h1>
+        <Link href="/admin/events/add" className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--background)]">
+          {ADMIN_COPY.events.addEvent}
+        </Link>
+      </div>
       <form className="flex gap-2">
         <label className="sr-only" htmlFor="q">
           {ADMIN_COPY.events.searchPlaceholder}

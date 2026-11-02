@@ -1,0 +1,26 @@
+{
+  "id": "vvG1HZ9eErfLmp",
+  "name": "Shlomo Artzi - Acoustic Show",
+  "url": "https://www.ticketmaster.co.il/event/shlomo-artzi",
+  "images": [
+    { "url": "https://s1.ticketm.net/dam/a/small.jpg", "width": 305, "height": 203, "ratio": "3_2" },
+    { "url": "https://s1.ticketm.net/dam/a/large.jpg", "width": 1136, "height": 639, "ratio": "16_9" }
+  ],
+  "dates": {
+    "start": { "dateTime": "2026-12-24T18:00:00Z", "localDate": "2026-12-24" },
+    "status": { "code": "onsale" }
+  },
+  "priceRanges": [{ "min": 150, "max": 450, "currency": "ILS" }],
+  "classifications": [{ "segment": { "name": "Music" }, "genre": { "name": "Rock" } }],
+  "_embedded": {
+    "venues": [
+      {
+        "name": "Menora Mivtachim Arena",
+        "city": { "name": "Tel Aviv-Yafo" },
+        "address": { "line1": "Derech Namir 2" },
+        "location": { "latitude": "32.0809", "longitude": "34.7806" }
+      }
+    ],
+    "attractions": [{ "name": "Shlomo Artzi" }]
+  }
+}

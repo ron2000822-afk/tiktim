@@ -4,14 +4,30 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pipeline": "./src/pipeline/index.ts",
+    "./connectors/types": "./src/connectors/types.ts",
+    "./connectors/manual": "./src/connectors/manual.ts"
+  },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@tiktim/db": "workspace:*",
+    "@tiktim/shared": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "dotenv": "^16.4.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
   }
 }
