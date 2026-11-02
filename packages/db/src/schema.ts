@@ -521,3 +521,13 @@ export const errorReports = pgTable("error_reports", {
   status: errorReportStatusEnum("status").notNull().default("open"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// "פרסמו אצלנו" contact form submissions (producers/advertisers).
+export const advertiserInquiries = pgTable("advertiser_inquiries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
