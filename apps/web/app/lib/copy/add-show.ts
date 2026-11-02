@@ -1,0 +1,18 @@
+export const ADD_SHOW_COPY = {
+  title: "הוספת הופעה",
+  intro: "מפיקים ואמנים יכולים להוסיף כאן הופעה שלא מופיעה באתר. הפנייה תיבדק על ידינו ותפורסם לאחר אישור.",
+  artistNameLabel: "שם האמן / ההופעה",
+  venueNameLabel: "שם האולם",
+  cityNameLabel: "עיר",
+  startsAtLabel: "תאריך ושעה",
+  categoryLabel: "קטגוריה",
+  categoryMusic: "מוזיקה",
+  categoryStandup: "סטנדאפ",
+  urlLabel: "קישור לרכישת כרטיסים (לא חובה)",
+  contactNameLabel: "שם איש קשר",
+  contactEmailLabel: "אימייל ליצירת קשר",
+  notesLabel: "הערות נוספות (לא חובה)",
+  submit: "שליחה לבדיקה",
+  thanks: "תודה! הפנייה התקבלה ותיבדק בקרוב. נפרסם את ההופעה לאחר אישור.",
+  error: "משהו השתבש, נסו שוב.",
+};
