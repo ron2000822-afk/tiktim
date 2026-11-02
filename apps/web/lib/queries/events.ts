@@ -138,6 +138,22 @@ export async function listEvents(filters: EventFilters = {}): Promise<EventCardD
     .offset(filters.offset ?? 0);
 }
 
+export async function listPastEventsByArtist(artistSlug: string, limit = 12): Promise<EventCardData[]> {
+  return db
+    .select(eventCardSelection)
+    .from(events)
+    .innerJoin(venues, eq(events.venueId, venues.id))
+    .innerJoin(cities, eq(venues.cityId, cities.id))
+    .innerJoin(categories, eq(events.categoryId, categories.id))
+    .innerJoin(eventArtists, and(eq(eventArtists.eventId, events.id), eq(eventArtists.role, "headliner")))
+    .innerJoin(artists, eq(artists.id, eventArtists.artistId))
+    .leftJoin(primaryArtistGenres, and(eq(primaryArtistGenres.artistId, artists.id), eq(primaryArtistGenres.isPrimary, true)))
+    .leftJoin(primaryGenre, eq(primaryGenre.id, primaryArtistGenres.genreId))
+    .where(and(eq(artists.slug, artistSlug), lte(events.startsAt, new Date())))
+    .orderBy(desc(events.startsAt))
+    .limit(limit);
+}
+
 export async function getEventByShortId(shortId: string) {
   const [event] = await db
     .select({
