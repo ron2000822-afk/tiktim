@@ -9,7 +9,7 @@ import type { EventCardData } from "@/lib/queries/events";
 
 const AUTO_ADVANCE_MS = 6000;
 
-export function HeroCarousel({ events }: { events: EventCardData[] }) {
+export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardData[]; sponsoredEventId?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -46,6 +46,11 @@ export function HeroCarousel({ events }: { events: EventCardData[] }) {
         style={{ background: `linear-gradient(135deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }}
       >
         <div className="max-w-xl space-y-2 text-[var(--background)]">
+          {event.id === sponsoredEventId && (
+            <span className="inline-block rounded-full bg-[var(--background)]/80 px-2 py-0.5 text-xs font-semibold">
+              {EVENT_CARD_COPY.sponsored}
+            </span>
+          )}
           <h2 className="text-3xl font-extrabold sm:text-5xl">{event.artistNameHe}</h2>
           <p className="text-lg opacity-90">{formatHebrewDayDate(event.startsAt)}</p>
           <p className="opacity-90">

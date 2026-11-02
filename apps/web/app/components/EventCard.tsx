@@ -6,14 +6,28 @@ import type { EventCardData } from "@/lib/queries/events";
 import { SaveHeart } from "./SaveHeart";
 import { StatusBadge } from "./StatusBadge";
 
-export function EventCard({ event, variant = "grid" }: { event: EventCardData; variant?: "grid" | "rail" }) {
+export function EventCard({
+  event,
+  variant = "grid",
+  sponsored = false,
+}: {
+  event: EventCardData;
+  variant?: "grid" | "rail";
+  sponsored?: boolean;
+}) {
   const href = `/event/${event.slug}-${event.shortId}`;
   const priceLabel = formatPriceFrom(event.minPrice) ?? EVENT_CARD_COPY.priceFallback;
 
   return (
     <article className={`relative ${variant === "rail" ? "w-56 shrink-0 snap-start sm:w-64" : ""}`}>
       <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between">
-        <StatusBadge status={event.status} />
+        {sponsored ? (
+          <span className="rounded-full bg-[var(--surface)]/90 px-2 py-0.5 text-xs font-semibold text-[var(--text-muted)]">
+            {EVENT_CARD_COPY.sponsored}
+          </span>
+        ) : (
+          <StatusBadge status={event.status} />
+        )}
         <SaveHeart eventShortId={event.shortId} />
       </div>
       <Link

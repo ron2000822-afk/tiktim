@@ -58,6 +58,9 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
         <Link href="/admin/metrics" className="block rounded-[var(--radius-button)] px-3 py-2 hover:bg-[var(--surface)]">
           {ADMIN_COPY.nav.metrics}
         </Link>
+        <Link href="/admin/promotions" className="block rounded-[var(--radius-button)] px-3 py-2 hover:bg-[var(--surface)]">
+          {ADMIN_COPY.nav.promotions}
+        </Link>
         <form action="/admin/sign-out" method="post" className="pt-4">
           <button type="submit" className="block w-full rounded-[var(--radius-button)] px-3 py-2 text-start hover:bg-[var(--surface)]">
             {ADMIN_COPY.nav.signOut}

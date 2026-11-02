@@ -22,3 +22,30 @@ export async function setSourceActive(sourceId: string, isActive: boolean) {
   await db.update(sources).set({ isActive }).where(eq(sources.id, sourceId));
   revalidatePath("/admin/ingestion");
 }
+
+export async function setSourceAffiliateConfig(formData: FormData) {
+  await assertAdmin();
+
+  const sourceId = String(formData.get("sourceId") ?? "");
+  const affiliateProgram = String(formData.get("affiliateProgram") ?? "").trim();
+  const affiliateConfigRaw = String(formData.get("affiliateConfig") ?? "").trim();
+
+  if (!sourceId) return { ok: false, error: "חסר מזהה מקור" };
+
+  let affiliateConfig: unknown = null;
+  if (affiliateConfigRaw) {
+    try {
+      affiliateConfig = JSON.parse(affiliateConfigRaw);
+    } catch {
+      return { ok: false, error: "ההגדרות חייבות להיות JSON תקין" };
+    }
+  }
+
+  await db
+    .update(sources)
+    .set({ affiliateProgram: affiliateProgram || null, affiliateConfig })
+    .where(eq(sources.id, sourceId));
+
+  revalidatePath("/admin/ingestion");
+  return { ok: true };
+}

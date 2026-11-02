@@ -3,8 +3,8 @@ import { and, asc, desc, eq, exists, gte, inArray, isNotNull, lte, ne, sql } fro
 import { db } from "@tiktim/db";
 import { artistGenres, artists, categories, cities, eventArtists, events, genres, venues } from "@tiktim/db/schema";
 
-const primaryArtistGenres = alias(artistGenres, "primary_artist_genres");
-const primaryGenre = alias(genres, "primary_genre");
+export const primaryArtistGenres = alias(artistGenres, "primary_artist_genres");
+export const primaryGenre = alias(genres, "primary_genre");
 
 export type EventCardData = {
   id: string;
@@ -29,7 +29,7 @@ export type EventCardData = {
   firstSeenAt: Date;
 };
 
-const eventCardSelection = {
+export const eventCardSelection = {
   id: events.id,
   slug: events.slug,
   shortId: events.shortId,

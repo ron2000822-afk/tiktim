@@ -11,6 +11,7 @@ import { EmptyState } from "@/app/components/EmptyState";
 import { HOME_COPY } from "@/app/lib/copy/home";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
+import { getActiveGenreRailPromotions, getActiveHeroPromotion } from "@/lib/queries/promotions";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -26,7 +27,7 @@ async function HomeContent() {
   const musicGenres = taxonomy.categories.find((c) => c.slug === "music")?.genres ?? [];
   const weekendRange = getWeekendRange();
 
-  const [hero, hotNow, weekend, freshListings, international, lastTickets, cities, genreRailsRaw, standup] =
+  const [hero, hotNow, weekend, freshListings, international, lastTickets, cities, genreRailsRaw, standup, heroPromotion, genreRailPromotions] =
     await Promise.all([
       listEvents({ featuredOnly: true, limit: 6 }),
       listEvents({ sort: "popularity", limit: 12 }),
@@ -45,10 +46,28 @@ async function HomeContent() {
       listCities(),
       Promise.all(musicGenres.map((g) => listEvents({ genreSlugs: [g.slug], limit: 10 }).then((rows) => ({ genre: g, rows })))),
       listEvents({ categorySlug: "standup", limit: 12 }),
+      getActiveHeroPromotion(),
+      getActiveGenreRailPromotions(),
     ]);
 
-  const heroEvents = hero.length > 0 ? hero : await listEvents({ sort: "popularity", limit: 6 });
-  const genreRails = genreRailsRaw.filter(({ rows }) => rows.length >= 3);
+  const heroEventsBase = hero.length > 0 ? hero : await listEvents({ sort: "popularity", limit: 6 });
+  // A sponsored placement is inserted on top of the organic hero rotation,
+  // never replacing it — per CLAUDE.md, promotions must never alter organic
+  // ranking, only add a clearly labeled slot.
+  const heroEvents = heroPromotion
+    ? [heroPromotion, ...heroEventsBase.filter((e) => e.id !== heroPromotion.id)]
+    : heroEventsBase;
+
+  // The >=3 threshold is about organic content quality, not about whether a
+  // paid placement renders — an advertiser who bought a genre-rail slot
+  // should see it live regardless of how many organic events that genre has.
+  const genreRails = genreRailsRaw
+    .filter(({ genre, rows }) => rows.length >= 3 || genreRailPromotions.has(genre.slug))
+    .map(({ genre, rows }) => {
+      const promoted = genreRailPromotions.get(genre.slug);
+      if (!promoted) return { genre, rows, promotedEventId: undefined as string | undefined };
+      return { genre, rows: [promoted, ...rows.filter((e) => e.id !== promoted.id)], promotedEventId: promoted.id };
+    });
   const citiesWithEvents = cities.slice(0, 20);
 
   const nothingAtAll = heroEvents.length === 0 && hotNow.length === 0;
@@ -59,7 +78,7 @@ async function HomeContent() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
-      {heroEvents.length > 0 && <HeroCarousel events={heroEvents} />}
+      {heroEvents.length > 0 && <HeroCarousel events={heroEvents} sponsoredEventId={heroPromotion?.id} />}
 
       <QuickChips />
 
@@ -87,10 +106,10 @@ async function HomeContent() {
         </Rail>
       )}
 
-      {genreRails.map(({ genre, rows }) => (
+      {genreRails.map(({ genre, rows, promotedEventId }) => (
         <Rail key={genre.slug} title={genre.name_he} href={`/music/${genre.slug}`}>
           {rows.map((e) => (
-            <EventCard key={e.id} event={e} variant="rail" />
+            <EventCard key={e.id} event={e} variant="rail" sponsored={e.id === promotedEventId} />
           ))}
         </Rail>
       ))}

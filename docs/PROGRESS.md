@@ -195,3 +195,20 @@ The owner found the real fix — walked through Supabase's "Connect" dialog (Dir
 Updated `DATABASE_URL` in `.env.local` (same password, new host+username), verified a real query against Supabase through it, then a full clean `turbo run build` — both pass. Owner updated the same value in Vercel's Production environment variables and redeployed: **the site is live.**
 
 With this, `/admin/metrics`'s `Date.now()`/`connection()` fix, the `turbo.json` globalEnv fix, and this pooler migration, there are no more known deploy blockers. Google OAuth is now the main remaining owner-provided prerequisite (blocks Phase 4 and literal Rich-Results-Test/admin-login verification, not further Phase 5/6 code).
+
+## 2026-11-03 — Phase 6: Monetization basics
+
+**Done**
+- `promotions` table (already in schema, unused until now) wired end to end: `/admin/promotions` lists all promotions with an active/inactive toggle; `/admin/promotions/new` searches for an event, then creates a promotion (slot, genre for genre-rail placements, date range, advertiser, price, notes).
+- Home page reads active promotions (`lib/queries/promotions.ts`) and **inserts** the sponsored event on top of the organic hero rotation / genre rail — never replaces organic content, never touches `/search` or `listEvents()`'s ordering at all (the promotions code isn't imported by either). `EventCard` and `HeroCarousel` both render a "ממומן" badge when `sponsored`/`sponsoredEventId` matches.
+- Affiliate config (`sources.affiliateProgram`/`affiliateConfig`) is now editable from `/admin/ingestion` — previously the Ticketmaster→Impact wiring was fully built in code (`buildAffiliateUrl`, already shipped in Phase 3) but there was no way to actually turn it on without a raw DB edit.
+
+**One real bug found and fixed while verifying:** the genre-rail `>=3 events` indexing/display threshold (from Phase 2/5, meant to hide thin organic rails) was applied *before* inserting the promoted event, so a paid genre-rail placement for a genre with fewer than 3 organic upcoming events would have silently never rendered — the advertiser would have paid for a slot that never appeared. Fixed: the threshold now also passes if that genre has an active promotion.
+
+**Verified live against the real Supabase DB:** created a real active hero promotion, a real active genre-rail promotion, and a deliberately-expired hero promotion (same event, all three), confirmed via direct query that only the 1 non-expired one is picked up as "active," confirmed the home page actually renders the "ממומן" badge in both the hero and the correct genre rail (inspected the raw HTML, not just the query result), then cleaned up all three test rows (DB back to 0 promotions, matching baseline).
+
+**Verified against the literal Phase 6 acceptance criteria:**
+- [x] **A scheduled promotion appears in the hero only within its date range, labeled "ממומן", and does not change `/search` ordering.** Verified live as above. `/search` ordering is structurally guaranteed unaffected — `app/search/page.tsx` and `lib/queries/events.ts#listEvents` never import anything from `lib/queries/promotions.ts`.
+- [x] **Outbound clicks report shows revenue-relevant breakdown per source.** Already built in Phase 5 (`/admin/metrics` → clicks by source), re-verified still correct.
+
+**Open / blocked on the owner:** same as before — Google OAuth remains the one item blocking live end-to-end testing of any admin page (promotions included) through an actual browser session.
