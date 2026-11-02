@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const { city: citySlug } = await params;
   const city = await resolveCity(citySlug);
   if (!city) return {};
-  return { title: LISTING_COPY.cityTitle(city.nameHe) };
+  return { title: LISTING_COPY.cityTitle(city.nameHe), alternates: { canonical: `/city/${citySlug}` } };
 }
 
 export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {

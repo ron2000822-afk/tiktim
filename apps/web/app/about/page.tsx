@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ABOUT_COPY } from "@/app/lib/copy/legal";
 
-export const metadata: Metadata = { title: "אודות" };
+export const metadata: Metadata = { title: "אודות", alternates: { canonical: "/about" } };
 
 export default function AboutPage() {
   return (

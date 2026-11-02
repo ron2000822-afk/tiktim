@@ -32,3 +32,7 @@ export async function listCities() {
     .from(cities)
     .orderBy(cities.nameHe);
 }
+
+export async function listAllVenueSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return db.select({ slug: venues.slug, updatedAt: venues.updatedAt }).from(venues);
+}

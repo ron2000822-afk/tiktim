@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ACCESSIBILITY_COPY } from "@/app/lib/copy/legal";
 
-export const metadata: Metadata = { title: ACCESSIBILITY_COPY.title };
+export const metadata: Metadata = { title: ACCESSIBILITY_COPY.title, alternates: { canonical: "/accessibility" } };
 
 export default function AccessibilityPage() {
   return (

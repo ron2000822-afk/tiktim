@@ -5,7 +5,7 @@ import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
 
-export const metadata: Metadata = { title: LISTING_COPY.todayTitle };
+export const metadata: Metadata = { title: LISTING_COPY.todayTitle, alternates: { canonical: "/today" } };
 
 async function TodayContent() {
   "use cache";

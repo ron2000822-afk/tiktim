@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ genre: st
   const events = await listEvents({ genreSlugs: [genreSlug], limit: 3 });
   return {
     title: genre.name_he,
+    alternates: { canonical: `/music/${genreSlug}` },
     robots: events.length < 3 ? { index: false } : undefined,
   };
 }

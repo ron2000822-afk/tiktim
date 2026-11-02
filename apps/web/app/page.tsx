@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { daysAgo, getThisWeekRange, getWeekendRange, taxonomy } from "@tiktim/shared";
 import { EventCard } from "@/app/components/EventCard";
@@ -10,6 +11,10 @@ import { EmptyState } from "@/app/components/EmptyState";
 import { HOME_COPY } from "@/app/lib/copy/home";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 async function HomeContent() {
   "use cache";

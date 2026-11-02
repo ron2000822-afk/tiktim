@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const venue = await getVenueBySlug(slug);
   if (!venue) return {};
-  return { title: `${venue.name}, ${venue.cityNameHe}` };
+  return { title: `${venue.name}, ${venue.cityNameHe}`, alternates: { canonical: `/venue/${slug}` } };
 }
 
 export default async function VenuePage({ params }: { params: Promise<{ slug: string }> }) {

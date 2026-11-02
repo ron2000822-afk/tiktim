@@ -19,3 +19,7 @@ export async function getArtistBySlug(slug: string) {
 
   return { ...artist, genres: artistGenreRows, followerCount: Number(followerCount) };
 }
+
+export async function listAllArtistSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return db.select({ slug: artists.slug, updatedAt: artists.updatedAt }).from(artists);
+}

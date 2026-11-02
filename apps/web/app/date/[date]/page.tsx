@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ date: str
   const parsed = parseDateParam(date);
   if (!parsed) return {};
   const range = getDateRangeForDay(parsed.year, parsed.month, parsed.day);
-  return { title: formatHebrewDayDate(range.start) };
+  return { title: formatHebrewDayDate(range.start), alternates: { canonical: `/date/${date}` } };
 }
 
 export default async function DatePage({ params }: { params: Promise<{ date: string }> }) {

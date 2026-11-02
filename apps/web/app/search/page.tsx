@@ -10,7 +10,13 @@ import { AutocompleteInput } from "./AutocompleteInput";
 
 export const instant = false;
 
-export const metadata: Metadata = { title: SEARCH_COPY.title };
+export const metadata: Metadata = {
+  title: SEARCH_COPY.title,
+  alternates: { canonical: "/search" },
+  // Filter-combination results aren't meant to rank individually — the
+  // canonical content lives on /music/[genre], /city/[city], etc.
+  robots: { index: false },
+};
 
 type SearchParams = Record<string, string | undefined>;
 

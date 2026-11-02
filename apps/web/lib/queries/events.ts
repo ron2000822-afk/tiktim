@@ -1,5 +1,5 @@
 import { alias } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, exists, gte, inArray, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gte, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { artistGenres, artists, categories, cities, eventArtists, events, genres, venues } from "@tiktim/db/schema";
 
@@ -76,7 +76,7 @@ export type EventFilters = {
 };
 
 export async function listEvents(filters: EventFilters = {}): Promise<EventCardData[]> {
-  const conditions = [gte(events.startsAt, filters.dateStart ?? new Date())];
+  const conditions = [gte(events.startsAt, filters.dateStart ?? new Date()), isNotNull(events.publishedAt)];
 
   if (filters.dateEnd) conditions.push(lte(events.startsAt, filters.dateEnd));
   if (filters.categorySlug) conditions.push(eq(categories.slug, filters.categorySlug));
@@ -155,9 +155,55 @@ export async function listPastEventsByArtist(artistSlug: string, limit = 12): Pr
     .innerJoin(artists, eq(artists.id, eventArtists.artistId))
     .leftJoin(primaryArtistGenres, and(eq(primaryArtistGenres.artistId, artists.id), eq(primaryArtistGenres.isPrimary, true)))
     .leftJoin(primaryGenre, eq(primaryGenre.id, primaryArtistGenres.genreId))
-    .where(and(eq(artists.slug, artistSlug), lte(events.startsAt, new Date())))
+    .where(and(eq(artists.slug, artistSlug), lte(events.startsAt, new Date()), isNotNull(events.publishedAt)))
     .orderBy(desc(events.startsAt))
     .limit(limit);
+}
+
+/** All published events (including past ones — they stay indexed, just with a "past" status). */
+export async function listAllPublishedEventRefs(): Promise<{ slug: string; shortId: string; updatedAt: Date }[]> {
+  return db
+    .select({ slug: events.slug, shortId: events.shortId, updatedAt: events.updatedAt })
+    .from(events)
+    .where(isNotNull(events.publishedAt));
+}
+
+/**
+ * Genre slugs with >=3 upcoming events — the same threshold that gates
+ * indexing on /music/[genre]. Matches listEvents's genreSlugs filter
+ * semantics exactly (any genre assignment on the headliner, not just
+ * their primary one) so the sitemap and the page's own noindex check
+ * never disagree.
+ */
+export async function listIndexableGenreSlugs(): Promise<string[]> {
+  const rows = await db
+    .select({ genreSlug: genres.slug, count: sql<number>`count(distinct ${events.id})` })
+    .from(events)
+    .innerJoin(eventArtists, and(eq(eventArtists.eventId, events.id), eq(eventArtists.role, "headliner")))
+    .innerJoin(artistGenres, eq(artistGenres.artistId, eventArtists.artistId))
+    .innerJoin(genres, eq(genres.id, artistGenres.genreId))
+    .where(and(isNotNull(events.publishedAt), gte(events.startsAt, new Date())))
+    .groupBy(genres.slug)
+    .having(sql`count(distinct ${events.id}) >= 3`);
+
+  return rows.map((r) => r.genreSlug);
+}
+
+/** genre/city pairs with >=3 upcoming events — the same threshold that gates indexing on the page itself. */
+export async function listIndexableGenreCityCombos(): Promise<{ genreSlug: string; citySlug: string }[]> {
+  const rows = await db
+    .select({ genreSlug: genres.slug, citySlug: cities.slug, count: sql<number>`count(distinct ${events.id})` })
+    .from(events)
+    .innerJoin(venues, eq(events.venueId, venues.id))
+    .innerJoin(cities, eq(venues.cityId, cities.id))
+    .innerJoin(eventArtists, and(eq(eventArtists.eventId, events.id), eq(eventArtists.role, "headliner")))
+    .innerJoin(artistGenres, eq(artistGenres.artistId, eventArtists.artistId))
+    .innerJoin(genres, eq(genres.id, artistGenres.genreId))
+    .where(and(isNotNull(events.publishedAt), gte(events.startsAt, new Date())))
+    .groupBy(genres.slug, cities.slug)
+    .having(sql`count(distinct ${events.id}) >= 3`);
+
+  return rows.map(({ genreSlug, citySlug }) => ({ genreSlug, citySlug }));
 }
 
 export async function getEventByShortId(shortId: string) {
@@ -202,7 +248,7 @@ export async function getEventByShortId(shortId: string) {
     .innerJoin(artists, eq(artists.id, eventArtists.artistId))
     .leftJoin(primaryArtistGenres, and(eq(primaryArtistGenres.artistId, artists.id), eq(primaryArtistGenres.isPrimary, true)))
     .leftJoin(primaryGenre, eq(primaryGenre.id, primaryArtistGenres.genreId))
-    .where(eq(events.shortId, shortId))
+    .where(and(eq(events.shortId, shortId), isNotNull(events.publishedAt)))
     .limit(1);
 
   return event ?? null;

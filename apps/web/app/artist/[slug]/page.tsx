@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: artist.nameHe,
     description: artist.bioShort ?? `כל התאריכים הקרובים של ${artist.nameHe} בישראל.`,
+    alternates: { canonical: `/artist/${slug}` },
   };
 }
 

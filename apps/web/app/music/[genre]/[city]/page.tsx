@@ -28,6 +28,7 @@ export async function generateMetadata({
   const events = await listEvents({ genreSlugs: [genreSlug], citySlug, limit: 3 });
   return {
     title: LISTING_COPY.genreInCityTitle(genre.name_he, city.nameHe),
+    alternates: { canonical: `/music/${genreSlug}/${citySlug}` },
     robots: events.length < 3 ? { index: false } : undefined,
   };
 }

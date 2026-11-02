@@ -9,6 +9,7 @@ import { listEvents } from "@/lib/queries/events";
 
 export const metadata: Metadata = {
   title: LISTING_COPY.musicTitle,
+  alternates: { canonical: "/music" },
 };
 
 async function MusicContent() {

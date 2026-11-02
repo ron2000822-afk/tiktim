@@ -9,6 +9,7 @@ import { listEvents } from "@/lib/queries/events";
 
 export const metadata: Metadata = {
   title: LISTING_COPY.standupTitle,
+  alternates: { canonical: "/standup" },
 };
 
 async function StandupContent() {

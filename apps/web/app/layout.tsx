@@ -11,6 +11,7 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: {
     default: SITE_NAME,
     template: `%s | ${SITE_NAME}`,

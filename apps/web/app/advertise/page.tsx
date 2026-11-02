@@ -4,7 +4,7 @@ import { ADVERTISE_COPY } from "@/app/lib/copy/legal";
 import { ADD_SHOW_COPY } from "@/app/lib/copy/add-show";
 import { AdvertiseForm } from "./AdvertiseForm";
 
-export const metadata: Metadata = { title: ADVERTISE_COPY.title };
+export const metadata: Metadata = { title: ADVERTISE_COPY.title, alternates: { canonical: "/advertise" } };
 
 export default function AdvertisePage() {
   return (
