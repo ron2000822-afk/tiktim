@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { CONSENT_COPY } from "@/app/lib/copy/consent";
-import { readConsentCookie, writeConsentCookie } from "@/app/lib/consent";
+import { writeConsentCookie } from "@/app/lib/consent";
 import { initPostHog } from "@/app/lib/posthog-client";
 
-export function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    // Reads a cookie (unavailable during SSR) after mount — avoids a
-    // server/client hydration mismatch, same pattern as SaveHeart.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVisible(readConsentCookie() === null);
-  }, []);
+export function CookieConsentBanner({ initialVisible }: { initialVisible: boolean }) {
+  // Determined server-side (CookieConsentServer reads the cookie via
+  // next/headers) and passed in directly, so the banner paints on the
+  // very first render instead of flashing in after a client-side
+  // useEffect — that round trip was the page's Largest Contentful Paint
+  // bottleneck (measured via Lighthouse against production).
+  const [visible, setVisible] = useState(initialVisible);
 
   function respond(granted: boolean) {
     writeConsentCookie(granted ? "granted" : "declined");
