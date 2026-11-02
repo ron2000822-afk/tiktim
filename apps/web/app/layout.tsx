@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
-import { CookieConsentBanner } from "@/app/components/CookieConsentBanner";
+import { CookieConsentServer } from "@/app/components/CookieConsentServer";
 import { PostHogProvider } from "@/app/components/PostHogProvider";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/app/lib/copy/site";
 
@@ -29,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1">{children}</main>
         <Footer />
         <PostHogProvider />
-        <CookieConsentBanner />
+        <Suspense fallback={null}>
+          <CookieConsentServer />
+        </Suspense>
       </body>
     </html>
   );
