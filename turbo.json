@@ -1,6 +1,22 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "APP_ENV",
+    "DATABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "TICKETMASTER_API_KEY",
+    "IMPACT_TICKETMASTER_PUBLISHER_ID",
+    "RESEND_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "NEXT_PUBLIC_POSTHOG_KEY",
+    "SENTRY_DSN",
+    "REVALIDATE_SECRET",
+    "SITE_URL",
+    "ADMIN_EMAILS"
+  ],
   "tasks": {
     "dev": {
       "cache": false,
