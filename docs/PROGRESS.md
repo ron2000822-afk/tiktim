@@ -212,3 +212,25 @@ With this, `/admin/metrics`'s `Date.now()`/`connection()` fix, the `turbo.json` 
 - [x] **Outbound clicks report shows revenue-relevant breakdown per source.** Already built in Phase 5 (`/admin/metrics` → clicks by source), re-verified still correct.
 
 **Open / blocked on the owner:** same as before — Google OAuth remains the one item blocking live end-to-end testing of any admin page (promotions included) through an actual browser session.
+
+## 2026-11-03 — Phase 7 spot-check: Lighthouse against the real production site
+
+With production actually live, ran real Lighthouse mobile audits against `https://tiktim-xi.vercel.app/` to spot-check Phase 7's acceptance bar early (not waiting until a dedicated Phase 7 pass).
+
+**Found and fixed a real performance issue:** home page mobile performance was 85 (bar is ≥90). The LCP element was today's own cookie consent banner — it rendered client-side only via a post-mount `useEffect` reading the consent cookie (the same safe-but-slow pattern as `SaveHeart`, chosen originally to avoid a hydration mismatch), so it painted late, after hydration, well behind the rest of the page.
+
+**Caught a false-positive regression while fixing it, worth remembering:** the first fix attempt (reading the cookie server-side via `next/headers` inside a `Suspense`-wrapped server component, then passing the initial state down as a prop — the standard PPR "dynamic island" pattern) appeared to break the `/admin` unauthenticated-redirect e2e test (`307` expected, got `200` — the exact `notFound()`/`redirect()`-inside-Suspense bug fixed back in Phase 2). Reverted immediately on seeing that. But the revert *also* failed the same test, which shouldn't have been possible — turned out `playwright.config.ts`'s `reuseExistingServer: true` was serving a stale `next start` process left running from an earlier manual check, so neither test run actually reflected the current code. Killed all stray Next processes, cleared `.next`, and reran clean: **the original Suspense-based fix passes the admin redirect test correctly** — it was never actually broken. Re-applied it (`git revert` the revert) after confirming 6/6 e2e tests pass twice in a row post-cleanup.
+
+**Lesson:** when a local e2e result contradicts what the code should obviously do, suspect the test harness (stale server, stale build) before trusting the result — rerunning with everything killed and `.next` cleared would have saved the detour.
+
+**Verified against production, post-fix (mobile Lighthouse):**
+| page | performance | accessibility | notes |
+|---|---|---|---|
+| home | 93 | 96 | was 85/96 before the fix |
+| event | 99 | 100 | |
+| search | 99 | 98 | SEO 66 — expected: `/search` is deliberately `noindex`ed (Phase 5), which Lighthouse's SEO category always penalizes regardless of whether it's intentional |
+| artist | 98 | 100 | |
+
+All four pages clear both of `docs/BUILD_PLAN.md` Phase 7's literal thresholds (performance ≥90, accessibility ≥95) on the pages it names. `pnpm test:e2e` (6 tests, including axe-core checks on home/event/search) passes clean.
+
+**Not done — the rest of Phase 7 is owner-gated, not code:** legal pages finalized by owner/lawyer, Sentry (`SENTRY_DSN`), Vercel/Supabase paid-plan upgrades (billing — explicitly requires the owner's approval, not something to do autonomously), and the beta with ~50 real users. Nothing further to build here until the owner acts on one of those.
