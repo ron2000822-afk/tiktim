@@ -1,0 +1,21 @@
+{
+  "id": 6182,
+  "event_id": "miki-geva-sample",
+  "event_name": "מיקי גבע",
+  "name": "מיקי גבע",
+  "location": {
+    "city": "הוד השרון",
+    "country": "IL",
+    "name": "בית מקומי לתרבות, הוד השרון",
+    "street": "יהושע בן גמלא 26"
+  },
+  "event_start": 1794511800,
+  "event_end": 1794519000,
+  "starting_price": 129,
+  "categories": {
+    "3": { "category_id": "3", "category_name": "מוזיקה" }
+  },
+  "active": true,
+  "sold_out": false,
+  "_sourceUrl": "https://www.leaan.co.il/events/%D7%9E%D7%99%D7%A7%D7%99-%D7%92%D7%91%D7%A2/6182"
+}

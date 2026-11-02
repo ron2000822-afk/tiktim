@@ -1,0 +1,21 @@
+{
+  "id": 8000,
+  "event_id": "moshe-ashkenazi-sample",
+  "event_name": "משה אשכנזי במופע סטנדאפ",
+  "name": "משה אשכנזי במופע סטנדאפ",
+  "location": {
+    "city": "תל אביב",
+    "country": "IL",
+    "name": "בית ציוני אמריקה (מרלן), תל אביב",
+    "street": "דניאל פריש 1"
+  },
+  "event_start": 1795806000,
+  "event_end": 1795813200,
+  "starting_price": 119,
+  "categories": {
+    "4": { "category_id": "4", "category_name": "בידור וסטנדאפ" }
+  },
+  "active": true,
+  "sold_out": false,
+  "_sourceUrl": "https://www.leaan.co.il/events/%D7%9E%D7%A9%D7%94-%D7%90%D7%A9%D7%9B%D7%A0%D7%96%D7%99-%D7%91%D7%9E%D7%95%D7%A4%D7%A2-%D7%A1%D7%98%D7%A0%D7%93%D7%90%D7%A4/8000"
+}

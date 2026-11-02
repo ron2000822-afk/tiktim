@@ -1,0 +1,21 @@
+{
+  "id": 7846,
+  "event_id": "circo-land-sample",
+  "event_name": "CIRCO LAND – סירקו לנד",
+  "name": "CIRCO LAND – סירקו לנד",
+  "location": {
+    "city": "פתח תקווה",
+    "country": "IL",
+    "name": "אוהל הקרקס, פתח תקווה",
+    "street": "צומת עיפרון"
+  },
+  "event_start": 1796383800,
+  "event_end": 1796394600,
+  "starting_price": 99,
+  "categories": {
+    "2": { "category_id": "2", "category_name": "ילדים" }
+  },
+  "active": true,
+  "sold_out": false,
+  "_sourceUrl": "https://www.leaan.co.il/events/CIRCO-LAND-%E2%80%93-%D7%A1%D7%99%D7%A8%D7%A7%D7%95-%D7%9C%D7%A0%D7%93/7846"
+}

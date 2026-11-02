@@ -347,10 +347,35 @@ export async function runPipeline(connector: Connector, opts: { dryRun?: boolean
   }
 
   const source = await ensureSource(connector);
+
+  if (!source.isActive) {
+    return {
+      sourceSlug: connector.slug,
+      dryRun: false,
+      startedAt: startedAt.toISOString(),
+      finishedAt: new Date().toISOString(),
+      status: "success",
+      fetched: 0,
+      created: 0,
+      updated: 0,
+      merged: 0,
+      queued: 0,
+      errors: 0,
+      errorSample: ["Source is inactive (sources.is_active = false) — skipped. Activate it in /admin to run this connector."],
+    };
+  }
+
   const [run] = await db
     .insert(ingestionRuns)
     .values({ sourceId: source.id, startedAt, status: "running" })
     .returning();
+
+  const [lastSuccessfulRun] = await db
+    .select()
+    .from(ingestionRuns)
+    .where(and(eq(ingestionRuns.sourceId, source.id), eq(ingestionRuns.status, "success"), ne(ingestionRuns.id, run.id)))
+    .orderBy(sql`started_at desc`)
+    .limit(1);
 
   let fetched = 0;
   let created = 0;
@@ -360,7 +385,11 @@ export async function runPipeline(connector: Connector, opts: { dryRun?: boolean
   const errorSample: string[] = [];
   const controller = new AbortController();
 
-  for await (const item of connector.fetch({ limit: opts.limit, signal: controller.signal })) {
+  for await (const item of connector.fetch({
+    since: lastSuccessfulRun?.finishedAt ?? undefined,
+    limit: opts.limit,
+    signal: controller.signal,
+  })) {
     fetched++;
     try {
       const normalized = connector.normalize(item);
@@ -414,14 +443,7 @@ export async function runPipeline(connector: Connector, opts: { dryRun?: boolean
 
   await applyStaleness(source.id, run.id);
 
-  const [previousRun] = await db
-    .select()
-    .from(ingestionRuns)
-    .where(and(eq(ingestionRuns.sourceId, source.id), eq(ingestionRuns.status, "success"), ne(ingestionRuns.id, run.id)))
-    .orderBy(sql`started_at desc`)
-    .limit(1);
-
-  const droppedSignificantly = previousRun && previousRun.fetched > 0 && fetched < previousRun.fetched * 0.7;
+  const droppedSignificantly = lastSuccessfulRun && lastSuccessfulRun.fetched > 0 && fetched < lastSuccessfulRun.fetched * 0.7;
   const status = errors > 0 && errors === fetched ? "failed" : droppedSignificantly ? "partial" : "success";
 
   await db

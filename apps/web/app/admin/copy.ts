@@ -96,9 +96,12 @@ export const ADMIN_COPY = {
       merged: "מוזגו",
       queued: "לבדיקה",
       errors: "שגיאות",
+      active: "פעיל",
     },
     never: "לא רץ מעולם",
     dropAlert: "ירידה חריגה בכמות הפריטים שנאספו לעומת הרגיל — בדקו את המקור.",
+    activate: "הפעלה",
+    deactivate: "השבתה",
     statusLabels: {
       running: "רץ כעת",
       success: "הצלחה",

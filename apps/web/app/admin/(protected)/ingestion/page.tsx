@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listSourcesWithLastRun } from "@/lib/queries/admin-ingestion";
 import { ADMIN_COPY } from "../../copy";
+import { SourceActiveToggle } from "./SourceActiveToggle";
 
 export const metadata: Metadata = { title: ADMIN_COPY.ingestion.title };
 export const instant = false;
@@ -37,6 +38,7 @@ export default async function IngestionDashboardPage() {
               <th className="py-2 text-start">{ADMIN_COPY.ingestion.columns.merged}</th>
               <th className="py-2 text-start">{ADMIN_COPY.ingestion.columns.queued}</th>
               <th className="py-2 text-start">{ADMIN_COPY.ingestion.columns.errors}</th>
+              <th className="py-2 text-start">{ADMIN_COPY.ingestion.columns.active}</th>
             </tr>
           </thead>
           <tbody>
@@ -65,6 +67,9 @@ export default async function IngestionDashboardPage() {
                   <td className="py-2">{lastRun?.merged ?? "—"}</td>
                   <td className="py-2">{lastRun?.queued ?? "—"}</td>
                   <td className="py-2">{lastRun?.errors ?? "—"}</td>
+                  <td className="py-2">
+                    <SourceActiveToggle sourceId={source.id} isActive={source.isActive} />
+                  </td>
                 </tr>
               );
             })}
