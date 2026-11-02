@@ -29,3 +29,16 @@ export function RailSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
+
+export function ListingPageSkeleton() {
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 8 }, (_, i) => (
+          <EventCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
