@@ -8,6 +8,7 @@ import { listEvents, type EventFilters } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
 import { AutocompleteInput } from "./AutocompleteInput";
 import { SearchTracker } from "./SearchTracker";
+import { logSearchQuery } from "@/lib/queries/search-log";
 
 export const instant = false;
 
@@ -52,6 +53,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   );
 
   const events = view === "grid" ? await listEvents({ ...filters, limit: 48 }) : [];
+
+  if (hasActiveFilters && view === "grid") {
+    // Fire-and-forget: a logging failure shouldn't break the search page itself.
+    logSearchQuery(sp.q, filters as unknown as Record<string, unknown>, events.length).catch(() => {});
+  }
 
   let dayCounts: { day: number; count: number }[] = [];
   if (view === "calendar") {

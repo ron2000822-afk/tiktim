@@ -494,6 +494,19 @@ export const outboundClicks = pgTable(
   ],
 );
 
+/** Logged from /search on every request with an active query/filter, so admin can spot coverage gaps (searches that return nothing). */
+export const searchQueries = pgTable(
+  "search_queries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    query: text("query"),
+    filters: jsonb("filters"),
+    resultCount: integer("result_count").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("search_queries_created_at_idx").on(table.createdAt)],
+);
+
 export const promotions = pgTable("promotions", {
   id: uuid("id").primaryKey().defaultRandom(),
   eventId: uuid("event_id")

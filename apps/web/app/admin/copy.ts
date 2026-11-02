@@ -17,6 +17,7 @@ export const ADMIN_COPY = {
     venues: "אולמות",
     review: "תור בדיקה",
     ingestion: "ריצות איסוף",
+    metrics: "מדדים",
     signOut: "התנתקות",
   },
   dashboard: {
@@ -108,5 +109,20 @@ export const ADMIN_COPY = {
       partial: "חלקי",
       failed: "נכשל",
     },
+  },
+  metrics: {
+    title: "מדדים",
+    intro: "נתוני יציאה לאתרי מכירה וחיפושים ללא תוצאות ב-30 הימים האחרונים.",
+    clicksBySourceTitle: "קליקים לפי מקור",
+    topEventsTitle: "ההופעות הכי נלחצות",
+    zeroResultsTitle: "חיפושים ללא תוצאות",
+    columns: {
+      source: "מקור",
+      count: "קליקים",
+      event: "הופעה",
+      query: "חיפוש",
+      searchCount: "פעמים",
+    },
+    empty: "אין נתונים עדיין.",
   },
 } as const;
