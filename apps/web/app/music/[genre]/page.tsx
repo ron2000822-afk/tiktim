@@ -33,19 +33,23 @@ export default async function GenrePage({ params }: { params: Promise<{ genre: s
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <h1 className="text-2xl font-bold">{genre.name_he}</h1>
-      {citiesWithEvents.length > 1 && (
-        <nav className="flex flex-wrap gap-2">
-          {citiesWithEvents.map((city) => (
-            <Link
-              key={city.slug}
-              href={`/music/${genreSlug}/${city.slug}`}
-              className="rounded-full border border-[var(--border)] px-3 py-1 text-sm hover:border-[var(--accent)]"
-            >
-              {LISTING_COPY.inCity(city.nameHe)}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <nav className="flex flex-wrap gap-2">
+        <Link
+          href={`/search?genre=${genreSlug}&weekday=4,5,6`}
+          className="rounded-full border border-[var(--accent)] px-3 py-1 text-sm text-[var(--accent)]"
+        >
+          {LISTING_COPY.weekendOnly}
+        </Link>
+        {citiesWithEvents.map((city) => (
+          <Link
+            key={city.slug}
+            href={`/music/${genreSlug}/${city.slug}`}
+            className="rounded-full border border-[var(--border)] px-3 py-1 text-sm hover:border-[var(--accent)]"
+          >
+            {LISTING_COPY.inCity(city.nameHe)}
+          </Link>
+        ))}
+      </nav>
       <EventListingGrid events={events} emptyTitle={LISTING_COPY.emptyTitle} emptyBody={LISTING_COPY.emptyBody} />
     </div>
   );

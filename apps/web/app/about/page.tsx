@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ABOUT_COPY } from "@/app/lib/copy/legal";
 
-export const metadata: Metadata = { title: ABOUT_COPY.title };
+export const metadata: Metadata = { title: "אודות" };
 
 export default function AboutPage() {
   return (

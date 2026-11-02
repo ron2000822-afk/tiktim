@@ -7,6 +7,7 @@ export const LISTING_COPY = {
   emptyTitle: "לא נמצאו הופעות",
   emptyBody: "נסו תאריך אחר, אזור סמוך או ז'אנר דומה.",
   inCity: (nameHe: string) => `ב${nameHe}`,
+  weekendOnly: "רק בסופ\"ש",
   cityTitle: (nameHe: string) => `הופעות ב${nameHe}`,
   genreInCityTitle: (genreHe: string, cityHe: string) => `${genreHe} ב${cityHe}`,
 };

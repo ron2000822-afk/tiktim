@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { allGenres } from "@tiktim/shared";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
@@ -45,6 +46,12 @@ export default async function GenreCityPage({
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       <h1 className="text-2xl font-bold">{LISTING_COPY.genreInCityTitle(genre.name_he, city.nameHe)}</h1>
+      <Link
+        href={`/search?genre=${genreSlug}&city=${citySlug}&weekday=4,5,6`}
+        className="inline-block rounded-full border border-[var(--accent)] px-3 py-1 text-sm text-[var(--accent)]"
+      >
+        {LISTING_COPY.weekendOnly}
+      </Link>
       <EventListingGrid events={events} emptyTitle={LISTING_COPY.emptyTitle} emptyBody={LISTING_COPY.emptyBody} />
     </div>
   );
