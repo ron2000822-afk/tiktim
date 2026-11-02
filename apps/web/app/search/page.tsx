@@ -7,6 +7,7 @@ import { SEARCH_COPY } from "@/app/lib/copy/search";
 import { listEvents, type EventFilters } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
 import { AutocompleteInput } from "./AutocompleteInput";
+import { SearchTracker } from "./SearchTracker";
 
 export const instant = false;
 
@@ -82,6 +83,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+      {hasActiveFilters && <SearchTracker filters={{ ...filters, view }} resultCount={events.length} />}
       <h1 className="text-2xl font-bold">{SEARCH_COPY.title}</h1>
 
       <form className="grid gap-4 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:grid-cols-3">

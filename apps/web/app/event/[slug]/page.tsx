@@ -12,6 +12,8 @@ import { EmptyState } from "@/app/components/EmptyState";
 import { getEventByShortId, listEvents } from "@/lib/queries/events";
 import { getOffersForEvent } from "@/lib/queries/offers";
 import { ErrorReportForm } from "./ErrorReportForm";
+import { OutboundOfferLink } from "./OutboundOfferLink";
+import { EventViewedTracker } from "./EventViewedTracker";
 
 export const instant = false;
 
@@ -99,6 +101,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <EventViewedTracker eventId={event.id} eventSlug={canonicalSlug} categorySlug={event.categorySlug} />
 
       <div
         className="relative flex min-h-56 items-end rounded-[var(--radius-card)] p-6"
@@ -164,12 +167,13 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                     <p className="font-semibold">{offer.sourceNameHe}</p>
                     {offer.priceMin && <p className="text-sm text-[var(--text-muted)]">{formatPriceFrom(offer.priceMin)}</p>}
                   </div>
-                  <a
+                  <OutboundOfferLink
                     href={`/go/${offer.id}?page=/event/${canonicalSlug}`}
-                    className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--background)]"
-                  >
-                    {EVENT_PAGE_COPY.buyAt(offer.sourceNameHe)}
-                  </a>
+                    offerId={offer.id}
+                    sourceNameHe={offer.sourceNameHe}
+                    eventSlug={canonicalSlug}
+                    label={EVENT_PAGE_COPY.buyAt(offer.sourceNameHe)}
+                  />
                 </li>
               ))}
             </ul>

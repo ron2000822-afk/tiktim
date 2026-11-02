@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EVENT_CARD_COPY } from "@/app/lib/copy/site";
+import { capture } from "@/app/lib/posthog-client";
 
 const STORAGE_KEY = "tiktim:savedEvents";
 
@@ -37,6 +38,7 @@ export function SaveHeart({ eventShortId }: { eventShortId: string }) {
     const next = saved ? ids.filter((id) => id !== eventShortId) : [...ids, eventShortId];
     writeSavedIds(next);
     setSaved(!saved);
+    capture(saved ? "event_unsaved" : "event_saved", { eventShortId });
   }
 
   return (
