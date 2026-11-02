@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { taxonomy } from "@tiktim/shared";
 import { Rail } from "@/app/components/Rail";
 import { EventCard } from "@/app/components/EventCard";
@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 async function MusicContent() {
   "use cache";
   cacheLife("hours");
+  cacheTag("events");
 
   const genres = taxonomy.categories.find((c) => c.slug === "music")?.genres ?? [];
   const railsRaw = await Promise.all(

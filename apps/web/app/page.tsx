@@ -1,4 +1,4 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { daysAgo, getThisWeekRange, getWeekendRange, taxonomy } from "@tiktim/shared";
 import { EventCard } from "@/app/components/EventCard";
 import { Rail } from "@/app/components/Rail";
@@ -14,6 +14,7 @@ import { listCities } from "@/lib/queries/venues";
 async function HomeContent() {
   "use cache";
   cacheLife("hours");
+  cacheTag("events");
 
   const weekRange = getThisWeekRange();
   const sevenDaysAgo = daysAgo(7);

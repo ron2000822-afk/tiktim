@@ -20,3 +20,4 @@ docs/Screenshot*.png
 docs/*screenshot*
 .vercel
 .env*
+.claude/

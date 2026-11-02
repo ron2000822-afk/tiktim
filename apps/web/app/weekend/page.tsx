@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { getWeekendRange } from "@tiktim/shared";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: LISTING_COPY.weekendTitle };
 async function WeekendContent() {
   "use cache";
   cacheLife("hours");
+  cacheTag("events");
 
   const range = getWeekendRange();
   const events = await listEvents({ dateStart: range.start, dateEnd: range.end, limit: 48 });

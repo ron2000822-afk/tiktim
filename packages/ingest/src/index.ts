@@ -1,6 +1,6 @@
 import "./load-env";
 import { connectors, getConnector } from "./connectors/registry";
-import { runPipeline } from "./pipeline";
+import { markPastEvents, runPipeline } from "./pipeline";
 
 function parseArgs(argv: string[]) {
   const args: { source?: string; dryRun: boolean; limit?: number } = { dryRun: false };
@@ -26,13 +26,37 @@ async function main() {
     return;
   }
 
+  let hadFailure = false;
+
   for (const connector of targets) {
-    const report = await runPipeline(connector, { dryRun: args.dryRun, limit: args.limit });
-    console.log(`[${connector.slug}]`, JSON.stringify(report, null, 2));
+    try {
+      const report = await runPipeline(connector, { dryRun: args.dryRun, limit: args.limit });
+      console.log(`[${connector.slug}]`, JSON.stringify(report, null, 2));
+    } catch (error) {
+      // A connector-level failure (e.g. a missing API key, or its fetch()
+      // throwing before yielding anything) must not stop other connectors
+      // or markPastEvents from running in a scheduled, unattended job.
+      hadFailure = true;
+      console.error(`[${connector.slug}] failed:`, error);
+    }
   }
+
+  if (!args.dryRun) {
+    const pastCount = await markPastEvents();
+    console.log(`Marked ${pastCount} event(s) as past.`);
+  }
+
+  if (hadFailure) process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => {
+    // The shared postgres connection pool stays open (by design, for the
+    // long-lived Next.js server) and would otherwise keep this one-shot
+    // CLI process alive forever.
+    process.exit(process.exitCode ?? 0);
+  });
