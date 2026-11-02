@@ -187,3 +187,11 @@ Moved on to Phase 5 since Phase 4 is almost entirely blocked on Google OAuth (pe
 - [~] **Google Rich Results Test validates an event page as Event.** Couldn't run the actual tool (needs a public URL; the site isn't live yet — see the Vercel deploy status above). Instead validated the rendered JSON-LD directly against Google's documented Event requirements: pulled it from a live dev-server response, confirmed valid JSON, and confirmed all three required properties (`name`, `startDate`, `location` with `name`+`address`) are present, plus the recommended `eventStatus`/`performer`/`offers` (with `url`/`price`/`priceCurrency`/`availability`). Structurally should pass; the literal tool run is owner-actionable once the site has a public URL.
 
 **Open / blocked on the owner:** same as before (Google OAuth, `RESEND_API_KEY`, `TICKETMASTER_API_KEY`, Tier 3 legal approval, the Supabase connection pooler for Vercel) — none block further Phase 5 code, only live end-to-end testing of a couple of items above.
+
+## 2026-11-02 — Vercel deploy fixed: switched to the Supabase session pooler
+
+The owner found the real fix — walked through Supabase's "Connect" dialog (Direct Connection tab → Session pooler, not the old Database Settings path, which has moved in their UI) and got the actual pooler connection string: `postgresql://postgres.<project-ref>:[password]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres`.
+
+Updated `DATABASE_URL` in `.env.local` (same password, new host+username), verified a real query against Supabase through it, then a full clean `turbo run build` — both pass. Owner updated the same value in Vercel's Production environment variables and redeployed: **the site is live.**
+
+With this, `/admin/metrics`'s `Date.now()`/`connection()` fix, the `turbo.json` globalEnv fix, and this pooler migration, there are no more known deploy blockers. Google OAuth is now the main remaining owner-provided prerequisite (blocks Phase 4 and literal Rich-Results-Test/admin-login verification, not further Phase 5/6 code).
