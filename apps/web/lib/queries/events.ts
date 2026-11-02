@@ -99,8 +99,14 @@ export async function listEvents(filters: EventFilters = {}): Promise<EventCardD
     );
   }
   if (filters.searchQuery) {
+    const likeQuery = `%${filters.searchQuery}%`;
     conditions.push(
-      sql`(${artists.nameNorm} % ${filters.searchQuery} or ${venues.nameNorm} % ${filters.searchQuery} or ${events.title} ilike ${"%" + filters.searchQuery + "%"})`,
+      sql`(
+        ${artists.nameNorm} ilike ${likeQuery} or ${artists.nameNorm} % ${filters.searchQuery}
+        or exists (select 1 from unnest(${artists.aliasesNorm}) alias where alias ilike ${likeQuery} or alias % ${filters.searchQuery})
+        or ${venues.nameNorm} ilike ${likeQuery} or ${venues.nameNorm} % ${filters.searchQuery}
+        or ${events.title} ilike ${likeQuery}
+      )`,
     );
   }
   if (filters.genreSlugs?.length) {

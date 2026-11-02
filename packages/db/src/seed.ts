@@ -1,6 +1,6 @@
 import "./load-env";
 import { eq } from "drizzle-orm";
-import { slugify, taxonomy } from "@tiktim/shared";
+import { normalizeHe, slugify, taxonomy } from "@tiktim/shared";
 import { db } from "./client";
 import {
   artistGenres,
@@ -109,7 +109,7 @@ async function main() {
         return {
           slug: v.slug,
           name: v.name,
-          nameNorm: slugify(v.name).replace(/-/g, " "),
+          nameNorm: normalizeHe(v.name),
           cityId: city.id,
           lat: city.lat,
           lng: city.lng,
@@ -175,9 +175,9 @@ async function main() {
         slug: `${slugify(a.nameEn)}-${i}`,
         nameHe: a.nameHe,
         nameEn: a.nameEn,
-        nameNorm: slugify(a.nameHe).replace(/-/g, " "),
+        nameNorm: normalizeHe(a.nameHe),
         aliases: [a.nameEn],
-        aliasesNorm: [slugify(a.nameEn).replace(/-/g, " ")],
+        aliasesNorm: [normalizeHe(a.nameEn)],
         isInternational: a.isInternational,
         popularity: randInt(0, 1000),
         isVerified: true,
