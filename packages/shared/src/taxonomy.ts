@@ -1,7 +1,5 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
 import { z } from "zod";
+import taxonomyJson from "../../../docs/taxonomy.json";
 
 const genreSchema = z.object({
   slug: z.string(),
@@ -43,14 +41,7 @@ export type TaxonomyCategory = z.infer<typeof categorySchema>;
 export type TaxonomyGenre = z.infer<typeof genreSchema>;
 export type TaxonomyRegion = z.infer<typeof regionSchema>;
 
-const taxonomyPath = resolve(
-  fileURLToPath(import.meta.url),
-  "../../../../docs/taxonomy.json",
-);
-
-export const taxonomy: Taxonomy = taxonomySchema.parse(
-  JSON.parse(readFileSync(taxonomyPath, "utf8")),
-);
+export const taxonomy: Taxonomy = taxonomySchema.parse(taxonomyJson);
 
 export const activeCategories = taxonomy.categories.filter((c) => c.is_active);
 

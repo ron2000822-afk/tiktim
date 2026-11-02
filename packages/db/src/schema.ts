@@ -15,6 +15,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -215,7 +216,10 @@ export const artistGenres = pgTable(
       .references(() => genres.id),
     isPrimary: boolean("is_primary").notNull().default(false),
   },
-  (table) => [primaryKey({ columns: [table.artistId, table.genreId] })],
+  (table) => [
+    primaryKey({ columns: [table.artistId, table.genreId] }),
+    uniqueIndex("artist_genres_one_primary_per_artist_idx").on(table.artistId).where(sql`${table.isPrimary} = true`),
+  ],
 );
 
 export const venues = pgTable(

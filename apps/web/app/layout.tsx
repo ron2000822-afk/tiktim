@@ -3,7 +3,7 @@ import { Heebo } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
-import { SITE_NAME } from "@/app/lib/copy";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/app/lib/copy/site";
 
 const heebo = Heebo({
   variable: "--font-heebo",
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: SITE_NAME,
     template: `%s | ${SITE_NAME}`,
   },
-  description: "כל ההופעות בישראל, מכל מוכרי הכרטיסים, במקום אחד.",
+  description: SITE_DESCRIPTION,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

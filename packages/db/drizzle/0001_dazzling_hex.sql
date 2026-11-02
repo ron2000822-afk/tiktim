@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "artist_genres_one_primary_per_artist_idx" ON "artist_genres" USING btree ("artist_id") WHERE "artist_genres"."is_primary" = true;

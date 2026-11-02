@@ -24,7 +24,18 @@
   --genre-indie: #12a594;
   --genre-electronic: #3e63dd;
   --genre-jazz: #b08a57;
+  --genre-soul: #c2298a;
+  --genre-metal: #71717a;
+  --genre-nostalgia: #d4a373;
+  --genre-jewish: #4f7cac;
+  --genre-folk: #8a9a5b;
+  --genre-world: #2a9d8f;
+  --genre-classical: #9c89b8;
+  --genre-tribute: #e07a5f;
   --genre-standup: #f76b15;
+  --genre-solo: #f76b15;
+  --genre-lineup: #f76b15;
+  --genre-open-mic: #f76b15;
 
   --radius-card: 16px;
   --radius-button: 12px;
