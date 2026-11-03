@@ -6,20 +6,28 @@ import { capture } from "@/app/lib/posthog-client";
 import { useCurrentUser } from "@/app/lib/use-current-user";
 import { readLocalSavedIds, writeLocalSavedIds } from "@/app/lib/local-saves";
 import { getSavedStatus, toggleSave } from "@/app/lib/actions/saved-events";
+import { useLazyActive } from "@/app/lib/use-lazy-active";
 
 export function SaveHeart({ eventShortId }: { eventShortId: string }) {
+  const { ref, active } = useLazyActive<HTMLButtonElement>();
   const { user, loading } = useCurrentUser();
   const [saved, setSaved] = useState(false);
 
+  // The home page alone renders 60-100+ of these across all its rails —
+  // without `active`, every single one runs its status-check effect (and
+  // the resulting re-render) on initial mount, which is real, measured
+  // main-thread cost. Gating on visibility means only the handful actually
+  // on screen do that work up front; the rest catch up right before the
+  // user scrolls to them.
   useEffect(() => {
-    if (loading) return;
+    if (!active || loading) return;
     if (user) {
       getSavedStatus(eventShortId).then(setSaved);
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSaved(readLocalSavedIds().includes(eventShortId));
     }
-  }, [eventShortId, user, loading]);
+  }, [active, eventShortId, user, loading]);
 
   async function toggle() {
     if (user) {
@@ -40,6 +48,7 @@ export function SaveHeart({ eventShortId }: { eventShortId: string }) {
 
   return (
     <button
+      ref={ref}
       type="button"
       onClick={toggle}
       aria-pressed={saved}
