@@ -191,7 +191,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         </div>
 
         <div className="flex items-end gap-3 sm:col-span-3">
-          <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[var(--background)]">
+          <button
+            type="submit"
+            className="inline-flex min-h-11 items-center rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[var(--background)]"
+          >
             {SEARCH_COPY.apply}
           </button>
           {hasActiveFilters && (
@@ -205,17 +208,19 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <div className="flex gap-2 text-sm">
         <Link
           href={buildHref({ view: undefined })}
-          className={`rounded-full border px-3 py-1 ${view === "grid" ? "border-[var(--accent)]" : "border-[var(--border)]"}`}
+          className={`inline-flex min-h-11 items-center rounded-full border px-3 ${view === "grid" ? "border-[var(--accent)]" : "border-[var(--border)]"}`}
         >
           {SEARCH_COPY.viewGrid}
         </Link>
         <Link
           href={buildHref({ view: "calendar" })}
-          className={`rounded-full border px-3 py-1 ${view === "calendar" ? "border-[var(--accent)]" : "border-[var(--border)]"}`}
+          className={`inline-flex min-h-11 items-center rounded-full border px-3 ${view === "calendar" ? "border-[var(--accent)]" : "border-[var(--border)]"}`}
         >
           {SEARCH_COPY.viewCalendar}
         </Link>
       </div>
+
+      <h2 className="sr-only">{SEARCH_COPY.resultsTitle}</h2>
 
       {view === "grid" ? (
         <EventListingGrid events={events} emptyTitle={SEARCH_COPY.emptyTitle} emptyBody={SEARCH_COPY.emptyBody} />

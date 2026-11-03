@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { HEADER_COPY, SITE_NAME } from "@/app/lib/copy/site";
-import { AuthMenu } from "@/app/components/AuthMenu";
+// AuthMenu (and the Supabase browser client it pulls in via useCurrentUser)
+// is deferred into its own chunk, loaded after the critical render path —
+// auth state isn't needed for first paint, and eagerly bundling it into
+// every page's initial JS measurably regressed Lighthouse mobile
+// performance (93 -> 83) once Phase 4 added it here plus two more
+// Supabase-client-using components mounted on every page. `ssr: false` is
+// only valid inside a Client Component, hence the wrapper.
+import { AuthMenuLazy as AuthMenu } from "@/app/components/AuthMenuLazy";
 
 export function Header() {
   return (

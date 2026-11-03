@@ -17,6 +17,7 @@ export const SEARCH_COPY = {
   sortPrice: "מחיר",
   viewGrid: "רשת",
   viewCalendar: "לוח שנה",
+  resultsTitle: "תוצאות",
   apply: "סינון",
   clear: "ניקוי מסננים",
   emptyTitle: "לא מצאנו הופעות שמתאימות",

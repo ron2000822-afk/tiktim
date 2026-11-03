@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +12,15 @@ import { getGenreIdBySlug } from "@/lib/queries/genres";
 import { FollowButton } from "@/app/components/FollowButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ genre: string }> }): Promise<Metadata> {
+  // listEvents() defaults dateStart to `new Date()` — an "unstable value"
+  // under Cache Components unless caught by `connection()` or, as here,
+  // cached: the page body already uses connection() for the same call, but
+  // forcing that here too would tip the whole route from PPR (shell +
+  // 1h-revalidated stream) to fully dynamic, which isn't the point — this
+  // metadata only needs to be roughly fresh, matching the home page's own
+  // "use cache" + cacheLife("hours") pattern for the same kind of query.
+  "use cache";
+  cacheLife("hours");
   const { genre: genreSlug } = await params;
   const genre = allGenres.find((g) => g.slug === genreSlug);
   if (!genre) return {};

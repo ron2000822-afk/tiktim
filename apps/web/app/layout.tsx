@@ -6,8 +6,12 @@ import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
 import { CookieConsentServer } from "@/app/components/CookieConsentServer";
 import { PostHogProvider } from "@/app/components/PostHogProvider";
-import { MergeLocalSaves } from "@/app/components/MergeLocalSaves";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/app/lib/copy/site";
+// Renders nothing and only matters once, right after a real login — no
+// reason for its code (and the Supabase browser client it pulls in) to be
+// part of every page's critical initial bundle. See Header.tsx for the
+// measured Lighthouse impact that motivated this.
+import { MergeLocalSavesLazy as MergeLocalSaves } from "@/app/components/MergeLocalSavesLazy";
 
 const heebo = Heebo({
   variable: "--font-heebo",

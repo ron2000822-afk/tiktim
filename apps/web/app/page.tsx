@@ -4,7 +4,6 @@ import { daysAgo, getThisWeekRange, getWeekendRange, taxonomy } from "@tiktim/sh
 import { EventCard } from "@/app/components/EventCard";
 import { Rail } from "@/app/components/Rail";
 import { QuickChips } from "@/app/components/QuickChips";
-import { PersonalizedRail } from "@/app/components/PersonalizedRail";
 import { HeroCarousel } from "@/app/components/HeroCarousel";
 import { CitiesGrid } from "@/app/components/CitiesGrid";
 import { NewsletterSignup } from "@/app/components/NewsletterSignup";
@@ -13,6 +12,10 @@ import { HOME_COPY } from "@/app/lib/copy/home";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
 import { getActiveGenreRailPromotions, getActiveHeroPromotion } from "@/lib/queries/promotions";
+// Not needed for first paint — only matters once auth state resolves, and
+// eagerly bundling it (and the Supabase client it uses) into the cached
+// home page's critical JS is exactly the cost this lazy boundary avoids.
+import { PersonalizedRailLazy as PersonalizedRail } from "@/app/components/PersonalizedRailLazy";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },

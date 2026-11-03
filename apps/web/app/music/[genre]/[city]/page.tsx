@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -20,6 +21,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ genre: string; city: string }>;
 }): Promise<Metadata> {
+  // Same reasoning as the single-genre page: cache rather than force fully
+  // dynamic, since this metadata only needs to be roughly fresh.
+  "use cache";
+  cacheLife("hours");
   const { genre: genreSlug, city: citySlug } = await params;
   const { genre, city } = await resolve(genreSlug, citySlug);
   if (!genre || !city) return {};
