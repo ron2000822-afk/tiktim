@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { listOpenErrorReports, listOpenReviewQueue } from "@/lib/queries/admin-review";
 import { ADMIN_COPY } from "../../copy";
 import { QueueItem } from "./QueueItem";
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: ADMIN_COPY.review.title };
 export const instant = false;
 
 export default async function ReviewQueuePage() {
+  await connection();
   const [queueRows, errorRows] = await Promise.all([listOpenReviewQueue(), listOpenErrorReports()]);
 
   return (

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
-
-export const instant = false;
 
 async function resolveCity(citySlug: string) {
   const cities = await listCities();
@@ -19,7 +18,10 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   return { title: LISTING_COPY.cityTitle(city.nameHe), alternates: { canonical: `/city/${citySlug}` } };
 }
 
+export const instant = false;
+
 export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {
+  await connection();
   const { city: citySlug } = await params;
   const city = await resolveCity(citySlug);
   if (!city) notFound();

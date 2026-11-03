@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { getDateRangeForDay, normalizeHe, taxonomy } from "@tiktim/shared";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
@@ -10,8 +11,6 @@ import { AutocompleteInput } from "./AutocompleteInput";
 import { SearchTracker } from "./SearchTracker";
 import { logSearchQuery } from "@/lib/queries/search-log";
 
-export const instant = false;
-
 export const metadata: Metadata = {
   title: SEARCH_COPY.title,
   alternates: { canonical: "/search" },
@@ -19,6 +18,8 @@ export const metadata: Metadata = {
   // canonical content lives on /music/[genre], /city/[city], etc.
   robots: { index: false },
 };
+
+export const instant = false;
 
 type SearchParams = Record<string, string | undefined>;
 
@@ -38,6 +39,7 @@ function parseFilters(sp: SearchParams): EventFilters {
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  await connection();
   const sp = await searchParams;
   const filters = parseFilters(sp);
   const view = sp.view === "calendar" ? "calendar" : "grid";

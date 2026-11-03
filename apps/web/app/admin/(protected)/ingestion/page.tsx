@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { listSourcesWithLastRun } from "@/lib/queries/admin-ingestion";
 import { ADMIN_COPY } from "../../copy";
 import { SourceActiveToggle } from "./SourceActiveToggle";
@@ -15,6 +16,7 @@ function isSignificantDrop(current: number, previous: number | null): boolean {
 }
 
 export default async function IngestionDashboardPage() {
+  await connection();
   const rows = await listSourcesWithLastRun();
   const statusLabels = ADMIN_COPY.ingestion.statusLabels as Record<string, string>;
 

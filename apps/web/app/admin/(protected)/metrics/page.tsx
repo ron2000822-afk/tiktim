@@ -7,9 +7,6 @@ export const metadata: Metadata = { title: ADMIN_COPY.metrics.title };
 export const instant = false;
 
 export default async function MetricsPage() {
-  // Forces request-time rendering before the `new Date()` calls inside the
-  // metrics queries below — otherwise Next's prerender analysis flags them
-  // as an unstable value, even with instant = false set on this route.
   await connection();
 
   const [bySource, topEvents, zeroResults] = await Promise.all([

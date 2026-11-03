@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { desc, eq, ilike } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { events, venues, cities } from "@tiktim/db/schema";
@@ -12,6 +13,7 @@ export default async function AdminEventsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  await connection();
   const { q } = await searchParams;
 
   const rows = await db

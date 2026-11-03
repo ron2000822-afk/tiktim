@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { artists, events, venues } from "@tiktim/db/schema";
@@ -6,6 +7,8 @@ import { ADMIN_COPY } from "../copy";
 export const instant = false;
 
 export default async function AdminDashboardPage() {
+  await connection();
+
   const [[eventCount], [artistCount], [venueCount]] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(events),
     db.select({ count: sql<number>`count(*)` }).from(artists),

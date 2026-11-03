@@ -1,13 +1,22 @@
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import { ADMIN_COPY } from "../copy";
 
-// Auth-gated and always dynamic — not a candidate for static prerendering.
+// `instant = false` tells Next's build-time Cache Components analysis to
+// allow this route to block instead of requiring a Suspense boundary. It's
+// NOT itself a guarantee the route is never cached at the edge — Vercel was
+// found serving a cached 200 to every visitor on every /admin/* route
+// (x-vercel-cache: PRERENDER) with only this flag set, because no call in
+// the tree gave Next an explicit, top-level dynamic signal it could trace.
+// `connection()` is that explicit signal — both are required together.
 export const instant = false;
 
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
+  await connection();
+
   const supabase = await createClient();
   const {
     data: { user },

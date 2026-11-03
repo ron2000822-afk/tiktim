@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { and, asc, eq, ilike } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { artistGenres, artists, categories, genres } from "@tiktim/db/schema";
@@ -11,6 +12,7 @@ export default async function AdminArtistsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  await connection();
   const { q } = await searchParams;
 
   const allGenres = await db

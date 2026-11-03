@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { formatHebrewDayDate, formatHebrewTime, formatPriceFrom, formatUpdatedAgo } from "@tiktim/shared";
@@ -15,11 +16,11 @@ import { ErrorReportForm } from "./ErrorReportForm";
 import { OutboundOfferLink } from "./OutboundOfferLink";
 import { EventViewedTracker } from "./EventViewedTracker";
 
-export const instant = false;
-
 function extractShortId(slugParam: string) {
   return slugParam.slice(-8);
 }
+
+export const instant = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+  await connection();
   const { slug: slugParam } = await params;
   const shortId = extractShortId(slugParam);
   const event = await getEventByShortId(shortId);

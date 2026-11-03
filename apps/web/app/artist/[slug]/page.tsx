@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { Rail } from "@/app/components/Rail";
@@ -8,8 +9,6 @@ import { ARTIST_PAGE_COPY } from "@/app/lib/copy/profile";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { getArtistBySlug } from "@/lib/queries/artists";
 import { listEvents, listPastEventsByArtist } from "@/lib/queries/events";
-
-export const instant = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -22,7 +21,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+export const instant = false;
+
 export default async function ArtistPage({ params }: { params: Promise<{ slug: string }> }) {
+  await connection();
   const { slug } = await params;
   const artist = await getArtistBySlug(slug);
   if (!artist) notFound();

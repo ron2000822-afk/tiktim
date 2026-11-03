@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { allGenres } from "@tiktim/shared";
@@ -6,8 +7,6 @@ import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
-
-export const instant = false;
 
 async function resolve(genreSlug: string, citySlug: string) {
   const genre = allGenres.find((g) => g.slug === genreSlug);
@@ -33,11 +32,14 @@ export async function generateMetadata({
   };
 }
 
+export const instant = false;
+
 export default async function GenreCityPage({
   params,
 }: {
   params: Promise<{ genre: string; city: string }>;
 }) {
+  await connection();
   const { genre: genreSlug, city: citySlug } = await params;
   const { genre, city } = await resolve(genreSlug, citySlug);
   if (!genre || !city) notFound();

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { formatHebrewDayDate, getDateRangeForDay } from "@tiktim/shared";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
-
-export const instant = false;
 
 const DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -24,7 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ date: str
   return { title: formatHebrewDayDate(range.start), alternates: { canonical: `/date/${date}` } };
 }
 
+export const instant = false;
+
 export default async function DatePage({ params }: { params: Promise<{ date: string }> }) {
+  await connection();
   const { date } = await params;
   const parsed = parseDateParam(date);
   if (!parsed) notFound();

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { VENUE_PAGE_COPY } from "@/app/lib/copy/profile";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { getVenueBySlug } from "@/lib/queries/venues";
 import { listEvents } from "@/lib/queries/events";
-
-export const instant = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -15,7 +14,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: `${venue.name}, ${venue.cityNameHe}`, alternates: { canonical: `/venue/${slug}` } };
 }
 
+export const instant = false;
+
 export default async function VenuePage({ params }: { params: Promise<{ slug: string }> }) {
+  await connection();
   const { slug } = await params;
   const venue = await getVenueBySlug(slug);
   if (!venue) notFound();

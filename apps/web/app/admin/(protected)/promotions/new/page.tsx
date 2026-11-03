@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { desc, eq, ilike } from "drizzle-orm";
 import { db } from "@tiktim/db";
 import { events, venues, cities } from "@tiktim/db/schema";
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: ADMIN_COPY.promotions.form.title };
 export const instant = false;
 
 export default async function NewPromotionPage({ searchParams }: { searchParams: Promise<{ q?: string; eventId?: string }> }) {
+  await connection();
   const { q, eventId } = await searchParams;
 
   if (eventId) {

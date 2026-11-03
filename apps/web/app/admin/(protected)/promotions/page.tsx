@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { listPromotions } from "@/lib/queries/admin-promotions";
 import { ADMIN_COPY } from "../../copy";
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: ADMIN_COPY.promotions.title };
 export const instant = false;
 
 export default async function PromotionsPage() {
+  await connection();
   const promotions = await listPromotions();
   const slotLabels = ADMIN_COPY.promotions.slotLabels as Record<string, string>;
 
