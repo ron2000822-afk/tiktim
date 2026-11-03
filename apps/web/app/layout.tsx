@@ -6,6 +6,7 @@ import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
 import { CookieConsentServer } from "@/app/components/CookieConsentServer";
 import { PostHogProvider } from "@/app/components/PostHogProvider";
+import { MergeLocalSaves } from "@/app/components/MergeLocalSaves";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/app/lib/copy/site";
 
 const heebo = Heebo({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1">{children}</main>
         <Footer />
         <PostHogProvider />
+        <MergeLocalSaves />
         <Suspense fallback={null}>
           <CookieConsentServer />
         </Suspense>

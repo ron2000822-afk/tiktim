@@ -4,6 +4,7 @@ import { daysAgo, getThisWeekRange, getWeekendRange, taxonomy } from "@tiktim/sh
 import { EventCard } from "@/app/components/EventCard";
 import { Rail } from "@/app/components/Rail";
 import { QuickChips } from "@/app/components/QuickChips";
+import { PersonalizedRail } from "@/app/components/PersonalizedRail";
 import { HeroCarousel } from "@/app/components/HeroCarousel";
 import { CitiesGrid } from "@/app/components/CitiesGrid";
 import { NewsletterSignup } from "@/app/components/NewsletterSignup";
@@ -81,6 +82,8 @@ async function HomeContent() {
       {heroEvents.length > 0 && <HeroCarousel events={heroEvents} sponsoredEventId={heroPromotion?.id} />}
 
       <QuickChips />
+
+      <PersonalizedRail />
 
       {hotNow.length > 0 && (
         <Rail title={HOME_COPY.hotNow}>

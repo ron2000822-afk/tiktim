@@ -1,3 +1,8 @@
+export const PROFILE_FOLLOW_COPY = {
+  follow: "עקבו",
+  following: "עוקבים",
+};
+
 export const ARTIST_PAGE_COPY = {
   followers: (count: number) => `${count} עוקבים`,
   upcomingDates: "תאריכים קרובים",

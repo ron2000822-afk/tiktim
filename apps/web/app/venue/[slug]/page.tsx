@@ -6,6 +6,7 @@ import { VENUE_PAGE_COPY } from "@/app/lib/copy/profile";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { getVenueBySlug } from "@/lib/queries/venues";
 import { listEvents } from "@/lib/queries/events";
+import { FollowButton } from "@/app/components/FollowButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -34,7 +35,10 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-extrabold">{venue.name}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold">{venue.name}</h1>
+          <FollowButton targetType="venue" targetId={venue.id} />
+        </div>
         <p className="text-[var(--text-muted)]">
           {venue.cityNameHe}
           {venue.address ? ` · ${venue.address}` : ""}

@@ -1,7 +1,19 @@
 import { alias } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, exists, gte, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gte, inArray, isNotNull, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@tiktim/db";
-import { artistGenres, artists, categories, cities, eventArtists, events, genres, venues } from "@tiktim/db/schema";
+import {
+  artistGenres,
+  artists,
+  categories,
+  cities,
+  eventArtists,
+  events,
+  follows,
+  genres,
+  profiles,
+  savedEvents,
+  venues,
+} from "@tiktim/db/schema";
 
 export const primaryArtistGenres = alias(artistGenres, "primary_artist_genres");
 export const primaryGenre = alias(genres, "primary_genre");
@@ -142,6 +154,59 @@ export async function listEvents(filters: EventFilters = {}): Promise<EventCardD
     .orderBy(...orderBy)
     .limit(filters.limit ?? 24)
     .offset(filters.offset ?? 0);
+}
+
+export async function listSavedEventsForUser(userId: string): Promise<EventCardData[]> {
+  return db
+    .select(eventCardSelection)
+    .from(savedEvents)
+    .innerJoin(events, eq(savedEvents.eventId, events.id))
+    .innerJoin(venues, eq(events.venueId, venues.id))
+    .innerJoin(cities, eq(venues.cityId, cities.id))
+    .innerJoin(categories, eq(events.categoryId, categories.id))
+    .innerJoin(eventArtists, and(eq(eventArtists.eventId, events.id), eq(eventArtists.role, "headliner")))
+    .innerJoin(artists, eq(artists.id, eventArtists.artistId))
+    .leftJoin(primaryArtistGenres, and(eq(primaryArtistGenres.artistId, artists.id), eq(primaryArtistGenres.isPrimary, true)))
+    .leftJoin(primaryGenre, eq(primaryGenre.id, primaryArtistGenres.genreId))
+    .where(eq(savedEvents.userId, userId))
+    .orderBy(asc(events.startsAt));
+}
+
+export async function listPersonalizedEventsForUser(userId: string, limit = 24): Promise<EventCardData[]> {
+  const [followedArtists, followedGenres, followedCities, [profile]] = await Promise.all([
+    db.select({ targetId: follows.targetId }).from(follows).where(and(eq(follows.userId, userId), eq(follows.targetType, "artist"))),
+    db.select({ targetId: follows.targetId }).from(follows).where(and(eq(follows.userId, userId), eq(follows.targetType, "genre"))),
+    db.select({ targetId: follows.targetId }).from(follows).where(and(eq(follows.userId, userId), eq(follows.targetType, "city"))),
+    db.select({ homeRegionId: profiles.homeRegionId }).from(profiles).where(eq(profiles.userId, userId)).limit(1),
+  ]);
+
+  const artistIds = followedArtists.map((r) => r.targetId);
+  const genreIds = followedGenres.map((r) => r.targetId);
+  const cityIds = followedCities.map((r) => r.targetId);
+  const homeRegionId = profile?.homeRegionId ?? null;
+
+  const signals = [
+    artistIds.length ? inArray(artists.id, artistIds) : undefined,
+    genreIds.length ? inArray(primaryGenre.id, genreIds) : undefined,
+    cityIds.length ? inArray(cities.id, cityIds) : undefined,
+    homeRegionId ? eq(cities.regionId, homeRegionId) : undefined,
+  ].filter((c): c is NonNullable<typeof c> => c !== undefined);
+
+  if (signals.length === 0) return [];
+
+  return db
+    .select(eventCardSelection)
+    .from(events)
+    .innerJoin(venues, eq(events.venueId, venues.id))
+    .innerJoin(cities, eq(venues.cityId, cities.id))
+    .innerJoin(categories, eq(events.categoryId, categories.id))
+    .innerJoin(eventArtists, and(eq(eventArtists.eventId, events.id), eq(eventArtists.role, "headliner")))
+    .innerJoin(artists, eq(artists.id, eventArtists.artistId))
+    .leftJoin(primaryArtistGenres, and(eq(primaryArtistGenres.artistId, artists.id), eq(primaryArtistGenres.isPrimary, true)))
+    .leftJoin(primaryGenre, eq(primaryGenre.id, primaryArtistGenres.genreId))
+    .where(and(gte(events.startsAt, new Date()), isNotNull(events.publishedAt), or(...signals)))
+    .orderBy(asc(events.startsAt))
+    .limit(limit);
 }
 
 export async function listPastEventsByArtist(artistSlug: string, limit = 12): Promise<EventCardData[]> {

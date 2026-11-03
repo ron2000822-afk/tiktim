@@ -1,4 +1,5 @@
 export const HOME_COPY = {
+  forYou: "בשבילך",
   hotNow: "חם עכשיו",
   weekendRail: "הסופ\"ש הקרוב",
   newListings: "חדש בלוח",

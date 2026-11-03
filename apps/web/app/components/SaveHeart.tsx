@@ -3,40 +3,37 @@
 import { useEffect, useState } from "react";
 import { EVENT_CARD_COPY } from "@/app/lib/copy/site";
 import { capture } from "@/app/lib/posthog-client";
-
-const STORAGE_KEY = "tiktim:savedEvents";
-
-function readSavedIds(): string[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeSavedIds(ids: string[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  } catch {
-    // localStorage unavailable (private browsing, quota) — fail silently.
-  }
-}
+import { useCurrentUser } from "@/app/lib/use-current-user";
+import { readLocalSavedIds, writeLocalSavedIds } from "@/app/lib/local-saves";
+import { getSavedStatus, toggleSave } from "@/app/lib/actions/saved-events";
 
 export function SaveHeart({ eventShortId }: { eventShortId: string }) {
+  const { user, loading } = useCurrentUser();
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    // Reads localStorage (unavailable during SSR) after mount — the
-    // intentional pattern to avoid a server/client hydration mismatch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSaved(readSavedIds().includes(eventShortId));
-  }, [eventShortId]);
+    if (loading) return;
+    if (user) {
+      getSavedStatus(eventShortId).then(setSaved);
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSaved(readLocalSavedIds().includes(eventShortId));
+    }
+  }, [eventShortId, user, loading]);
 
-  function toggle() {
-    const ids = readSavedIds();
+  async function toggle() {
+    if (user) {
+      const result = await toggleSave(eventShortId);
+      if ("saved" in result) {
+        setSaved(result.saved);
+        capture(result.saved ? "event_saved" : "event_unsaved", { eventShortId });
+      }
+      return;
+    }
+
+    const ids = readLocalSavedIds();
     const next = saved ? ids.filter((id) => id !== eventShortId) : [...ids, eventShortId];
-    writeSavedIds(next);
+    writeLocalSavedIds(next);
     setSaved(!saved);
     capture(saved ? "event_unsaved" : "event_saved", { eventShortId });
   }

@@ -1,0 +1,30 @@
+{
+  "name": "@tiktim/emails",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "send": "tsx src/send-jobs.ts"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.0.31",
+    "@tiktim/db": "workspace:*",
+    "@tiktim/shared": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "react": "^19.0.0",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "dotenv": "^16.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -15,7 +15,8 @@
     "db:generate": "pnpm --filter @tiktim/db db:generate",
     "db:migrate": "pnpm --filter @tiktim/db db:migrate",
     "db:seed": "pnpm --filter @tiktim/db db:seed",
-    "ingest": "pnpm --filter @tiktim/ingest start"
+    "ingest": "pnpm --filter @tiktim/ingest start",
+    "send-emails": "pnpm --filter @tiktim/emails send"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.18.0",

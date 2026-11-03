@@ -5,6 +5,7 @@ import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
+import { FollowButton } from "@/app/components/FollowButton";
 
 async function resolveCity(citySlug: string) {
   const cities = await listCities();
@@ -30,7 +31,10 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      <h1 className="text-2xl font-bold">{LISTING_COPY.cityTitle(city.nameHe)}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{LISTING_COPY.cityTitle(city.nameHe)}</h1>
+        <FollowButton targetType="city" targetId={city.id} />
+      </div>
       <EventListingGrid events={events} emptyTitle={LISTING_COPY.emptyTitle} emptyBody={LISTING_COPY.emptyBody} />
     </div>
   );

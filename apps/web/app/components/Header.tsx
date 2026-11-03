@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HEADER_COPY, SITE_NAME } from "@/app/lib/copy/site";
+import { AuthMenu } from "@/app/components/AuthMenu";
 
 export function Header() {
   return (
@@ -30,6 +31,8 @@ export function Header() {
             {HEADER_COPY.navStandup}
           </Link>
         </nav>
+
+        <AuthMenu />
       </div>
     </header>
   );

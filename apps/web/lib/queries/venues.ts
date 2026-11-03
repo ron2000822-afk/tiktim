@@ -28,7 +28,7 @@ export async function getVenueBySlug(slug: string) {
 
 export async function listCities() {
   return db
-    .select({ slug: cities.slug, nameHe: cities.nameHe })
+    .select({ id: cities.id, slug: cities.slug, nameHe: cities.nameHe })
     .from(cities)
     .orderBy(cities.nameHe);
 }

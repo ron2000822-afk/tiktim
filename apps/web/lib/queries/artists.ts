@@ -23,3 +23,10 @@ export async function getArtistBySlug(slug: string) {
 export async function listAllArtistSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
   return db.select({ slug: artists.slug, updatedAt: artists.updatedAt }).from(artists);
 }
+
+export async function listArtistsForOnboarding() {
+  return db
+    .select({ id: artists.id, nameHe: artists.nameHe })
+    .from(artists)
+    .orderBy(artists.nameHe);
+}

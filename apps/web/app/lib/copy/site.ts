@@ -4,10 +4,22 @@ export const SITE_DESCRIPTION = "כל ההופעות בישראל, מכל מוכ
 
 export const HEADER_COPY = {
   login: "התחברות",
+  loginWithGoogle: "התחברות עם Google",
+  myAccount: "האזור שלי",
+  signOut: "התנתקות",
   navMusic: "מוזיקה",
   navStandup: "סטנדאפ",
   searchPlaceholder: "אמן, אולם או עיר...",
   searchSubmit: "חיפוש",
+};
+
+export const AUTH_PROMPT_COPY = {
+  followTitle: "התחברו כדי לעקוב",
+  followBody: "התחברות עם Google מאפשרת לך לעקוב ולקבל התראות על הופעות חדשות.",
+  saveTitle: "התחברו כדי לשמור הופעות",
+  saveBody: "הופעות שתשמרו יישארו זמינות בכל המכשירים שלך, ותקבלו תזכורת לפני המופע.",
+  cta: "התחברות עם Google",
+  cancel: "לא עכשיו",
 };
 
 export const FOOTER_COPY = {
@@ -58,5 +70,6 @@ export const NEWSLETTER_COPY = {
   body: "ניוזלטר שבועי עם ההופעות הכי שוות, מותאם לטעם שלך.",
   emailPlaceholder: "כתובת מייל",
   submit: "הרשמה",
+  confirmSent: "שלחנו לך מייל לאישור ההרשמה.",
   comingSoon: "ההרשמה תהיה זמינה בקרוב.",
 };

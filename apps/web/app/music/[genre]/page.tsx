@@ -7,6 +7,8 @@ import { EventListingGrid } from "@/app/components/EventListingGrid";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { listEvents } from "@/lib/queries/events";
 import { listCities } from "@/lib/queries/venues";
+import { getGenreIdBySlug } from "@/lib/queries/genres";
+import { FollowButton } from "@/app/components/FollowButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ genre: string }> }): Promise<Metadata> {
   const { genre: genreSlug } = await params;
@@ -29,13 +31,20 @@ export default async function GenrePage({ params }: { params: Promise<{ genre: s
   const genre = allGenres.find((g) => g.slug === genreSlug);
   if (!genre) notFound();
 
-  const [events, cities] = await Promise.all([listEvents({ genreSlugs: [genreSlug], limit: 48 }), listCities()]);
+  const [events, cities, genreId] = await Promise.all([
+    listEvents({ genreSlugs: [genreSlug], limit: 48 }),
+    listCities(),
+    getGenreIdBySlug(genreSlug),
+  ]);
   const citySlugsWithEvents = new Set(events.map((e) => e.citySlug));
   const citiesWithEvents = cities.filter((c) => citySlugsWithEvents.has(c.slug));
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      <h1 className="text-2xl font-bold">{genre.name_he}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{genre.name_he}</h1>
+        {genreId && <FollowButton targetType="genre" targetId={genreId} />}
+      </div>
       <nav className="flex flex-wrap gap-2">
         <Link
           href={`/search?genre=${genreSlug}&weekday=4,5,6`}

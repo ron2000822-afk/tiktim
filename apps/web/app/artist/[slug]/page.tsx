@@ -9,6 +9,7 @@ import { ARTIST_PAGE_COPY } from "@/app/lib/copy/profile";
 import { LISTING_COPY } from "@/app/lib/copy/listing";
 import { getArtistBySlug } from "@/lib/queries/artists";
 import { listEvents, listPastEventsByArtist } from "@/lib/queries/events";
+import { FollowButton } from "@/app/components/FollowButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -36,8 +37,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-extrabold">{artist.nameHe}</h1>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-3xl font-extrabold">{artist.nameHe}</h1>
+          <FollowButton targetType="artist" targetId={artist.id} />
+        </div>
         <div className="flex flex-wrap gap-2 text-sm text-[var(--text-muted)]">
           <span>{ARTIST_PAGE_COPY.followers(artist.followerCount)}</span>
           {artist.isInternational && <span>· {ARTIST_PAGE_COPY.international}</span>}

@@ -1,0 +1,45 @@
+name: Scheduled emails
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+    - cron: "0 8 * * 3"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "alerts (new shows + reminders + status changes) or digest (weekly newsletter)"
+        type: choice
+        options: [alerts, digest]
+        default: alerts
+
+jobs:
+  send-emails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Determine mode
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 8 * * 3" ]; then
+            echo "mode=digest" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.mode }}" ]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=alerts" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: pnpm send-emails ${{ steps.mode.outputs.mode }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL }}
