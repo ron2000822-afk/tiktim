@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { cacheLife } from "next/cache";
 import { listAllArtistSlugs } from "@/lib/queries/artists";
 import { listIndexableGenreCityCombos, listIndexableGenreSlugs, listAllPublishedEventRefs } from "@/lib/queries/events";
 import { listAllVenueSlugs, listCities } from "@/lib/queries/venues";
@@ -6,6 +7,15 @@ import { listAllVenueSlugs, listCities } from "@/lib/queries/venues";
 const STATIC_PATHS = ["/", "/music", "/standup", "/today", "/weekend", "/this-week", "/about", "/terms", "/privacy", "/accessibility", "/advertise"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Without this, every crawler hit re-ran 6 parallel DB queries covering
+  // every published event/artist/venue/city/genre-city combo — pure waste,
+  // since the sitemap only needs to be roughly fresh, matching the 1h
+  // window already used for the ISR pages it lists. `export const
+  // revalidate` (the older route-segment-config form) isn't compatible
+  // with Cache Components — this is the per-function equivalent.
+  "use cache";
+  cacheLife("hours");
+
   const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
   const [events, artists, venues, cities, musicGenreSlugs, genreCityCombos] = await Promise.all([

@@ -65,6 +65,13 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         { name: "Heebo", data: regular, weight: 400, style: "normal" },
         { name: "Heebo", data: bold, weight: 900, style: "normal" },
       ],
+      // `"use cache"` can't wrap this: ImageResponse isn't a plain,
+      // cache-serializable object (confirmed — it broke the route with a
+      // real 500 in production). A standard HTTP Cache-Control header is
+      // the correct lever here instead; Vercel's CDN honors it directly,
+      // so Satori's genuinely CPU-heavy rendering doesn't re-run on every
+      // single crawler/social-share fetch of the same event.
+      headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
     },
   );
 }

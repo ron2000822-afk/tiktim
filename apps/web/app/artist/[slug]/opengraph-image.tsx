@@ -58,6 +58,12 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         { name: "Heebo", data: regular, weight: 400, style: "normal" },
         { name: "Heebo", data: bold, weight: 900, style: "normal" },
       ],
+      // `"use cache"` can't wrap this — ImageResponse isn't a plain,
+      // cache-serializable object (confirmed on the event OG image route:
+      // it broke with a real 500 in production). A standard HTTP
+      // Cache-Control header is the correct lever, which Vercel's CDN
+      // honors directly.
+      headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
     },
   );
 }
