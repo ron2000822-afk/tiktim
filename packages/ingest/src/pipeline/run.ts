@@ -282,9 +282,15 @@ export async function processListing(
     .select({ min: sql<string | null>`min(price_min)`, max: sql<string | null>`max(price_max)` })
     .from(ticketOffers)
     .where(and(eq(ticketOffers.eventId, eventId), eq(ticketOffers.isActive, true)));
+  // `?? undefined` would drop both keys from the update's set() when no
+  // offer has a price (common for real listings — not yet on sale, dynamic
+  // pricing), and Drizzle throws "No values to set" on an empty set() —
+  // confirmed live: 50/65 real Ticketmaster listings failed on this exact
+  // path. `?? null` keeps the keys present so the column is explicitly
+  // cleared instead.
   await db
     .update(events)
-    .set({ minPrice: priceAgg?.min ?? undefined, maxPrice: priceAgg?.max ?? undefined })
+    .set({ minPrice: priceAgg?.min ?? null, maxPrice: priceAgg?.max ?? null })
     .where(eq(events.id, eventId));
 
   const existingGenres = await db.select().from(artistGenres).where(eq(artistGenres.artistId, headliner.id)).limit(1);
