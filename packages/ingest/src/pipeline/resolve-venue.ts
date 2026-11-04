@@ -4,6 +4,7 @@ import { db } from "@tiktim/db";
 import { cities, venues } from "@tiktim/db/schema";
 
 const VENUE_SIMILARITY_THRESHOLD = 0.6;
+const CITY_SIMILARITY_THRESHOLD = 0.4;
 
 export async function resolveCity(rawCityName: string | undefined): Promise<string | null> {
   if (!rawCityName) return null;
@@ -17,12 +18,25 @@ export async function resolveCity(rawCityName: string | undefined): Promise<stri
     .limit(1);
   if (exact) return exact.id;
 
-  const [fuzzy] = await db
-    .select({ id: cities.id })
-    .from(cities)
-    .where(sql`${cities.nameHe} ilike ${"%" + name + "%"}`)
-    .limit(1);
-  return fuzzy?.id ?? null;
+  // The old fallback only tried `name_he ilike '%...%'` — a dead path for
+  // any English-sourced city name (Ticketmaster sends "Tel Aviv - Jaffa",
+  // our seed has "Tel Aviv-Yafo" as name_en; punctuation/spelling variants
+  // like this will never match via ilike). Reuses the same pg_trgm
+  // similarity approach already proven for venue matching below, checked
+  // against both name_he and name_en so it generalizes to future English
+  // seller spellings instead of only fixing this one city.
+  const fuzzy = await db.execute<{ id: string; score: number }>(sql`
+    select id, greatest(similarity(name_he, ${name}), similarity(coalesce(name_en, ''), ${name})) as score
+    from cities
+    where name_he % ${name} or coalesce(name_en, '') % ${name}
+    order by score desc
+    limit 1
+  `);
+  const best = fuzzy[0];
+  if (best && Number(best.score) >= CITY_SIMILARITY_THRESHOLD) {
+    return best.id;
+  }
+  return null;
 }
 
 export type VenueResolution = { kind: "matched"; venueId: string } | { kind: "unmatched" };
