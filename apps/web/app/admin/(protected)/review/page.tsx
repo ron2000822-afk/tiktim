@@ -4,19 +4,29 @@ import { listOpenErrorReports, listOpenReviewQueue } from "@/lib/queries/admin-r
 import { ADMIN_COPY } from "../../copy";
 import { QueueItem } from "./QueueItem";
 import { ErrorReportItem } from "./ErrorReportItem";
+import { BulkApproveButton } from "./BulkApproveButton";
 
 export const metadata: Metadata = { title: ADMIN_COPY.review.title };
 export const instant = false;
 
+// Mirrors BULK_SAFE_KINDS in actions.ts — kept in sync by hand since a
+// "use server" file can only export async functions, not a shared
+// constant.
+const BULK_SAFE_KINDS = new Set(["low_confidence_event", "unmatched_artist", "unmatched_venue", "genre_suggestion"]);
+
 export default async function ReviewQueuePage() {
   await connection();
   const [queueRows, errorRows] = await Promise.all([listOpenReviewQueue(), listOpenErrorReports()]);
+  const bulkEligibleCount = queueRows.filter((row) => BULK_SAFE_KINDS.has(row.kind)).length;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">{ADMIN_COPY.review.title}</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{ADMIN_COPY.review.intro}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{ADMIN_COPY.review.title}</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{ADMIN_COPY.review.intro}</p>
+        </div>
+        <BulkApproveButton eligibleCount={bulkEligibleCount} />
       </div>
 
       <section className="space-y-3">
