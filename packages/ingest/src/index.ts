@@ -1,6 +1,6 @@
 import "./load-env";
 import { connectors, getConnector } from "./connectors/registry";
-import { markPastEvents, runPipeline } from "./pipeline";
+import { declassifyGenericImages, markPastEvents, runPipeline } from "./pipeline";
 
 function parseArgs(argv: string[]) {
   const args: { source?: string; dryRun: boolean; limit?: number } = { dryRun: false };
@@ -44,6 +44,8 @@ async function main() {
   if (!args.dryRun) {
     const pastCount = await markPastEvents();
     console.log(`Marked ${pastCount} event(s) as past.`);
+    const declassifiedCount = await declassifyGenericImages();
+    console.log(`Cleared ${declassifiedCount} generic/shared event image(s).`);
   }
 
   if (hadFailure) process.exitCode = 1;

@@ -523,3 +523,21 @@ export async function markPastEvents(): Promise<number> {
     .returning({ id: events.id });
   return result.length;
 }
+
+// Not every seller gives each event its own photo — Ticketmaster in
+// particular falls back to a generic venue/placeholder image for many
+// listings, and the same URL ends up attached to dozens of unrelated
+// events (one placeholder was shared by 41 real events in production).
+// A single reused photo looks worse than the card's own gradient
+// fallback, so anything shared by more than a couple of events gets
+// treated as "no real image" rather than shown.
+export async function declassifyGenericImages(): Promise<number> {
+  const result = await db.execute<{ id: string }>(sql`
+    with generic as (
+      select image_url from events where image_url is not null group by image_url having count(*) > 2
+    )
+    update events set image_url = null where image_url in (select image_url from generic)
+    returning id
+  `);
+  return result.length;
+}
