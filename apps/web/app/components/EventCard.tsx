@@ -49,12 +49,12 @@ export function EventCard({
           }
         >
           {!displayImageUrl && (
-            <span className="text-2xl font-extrabold leading-tight text-[var(--background)]/90">
+            <span className="text-2xl font-extrabold leading-tight text-[var(--text)]">
               {event.artistNameHe}
             </span>
           )}
           {isArtistFallbackImage && event.artistImageCredit && (
-            <span className="absolute bottom-1 start-1 rounded bg-black/50 px-1 text-[10px] text-[var(--background)]">
+            <span className="absolute bottom-1 start-1 rounded bg-black/50 px-1 text-[10px] text-[var(--text)]">
               {EVENT_CARD_COPY.photoCredit(event.artistImageCredit)}
             </span>
           )}

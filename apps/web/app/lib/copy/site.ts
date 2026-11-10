@@ -57,6 +57,12 @@ export const RAIL_COPY = {
   seeAll: "הכל",
 };
 
+export const HERO_CAROUSEL_COPY = {
+  previous: "ההופעה הקודמת",
+  next: "ההופעה הבאה",
+  goToSlide: (index: number, total: number) => `הופעה ${index} מתוך ${total}`,
+};
+
 export const QUICK_CHIPS_COPY = {
   today: "היום",
   tomorrow: "מחר",
