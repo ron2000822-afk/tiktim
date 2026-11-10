@@ -3,6 +3,7 @@ import { slugify } from "@tiktim/shared";
 import { db } from "@tiktim/db";
 import {
   artistGenres,
+  artists,
   categories,
   eventArtists,
   events,
@@ -19,6 +20,7 @@ import { disambiguateArtist } from "./disambiguate-artist";
 import { resolveCity, resolveVenue, createUnverifiedVenue } from "./resolve-venue";
 import { decideEventMatch, type EventCandidate } from "./match-event";
 import { suggestGenres } from "./classify-genre";
+import { findArtistImage } from "./find-artist-image";
 
 export type PipelineReport = {
   sourceSlug: string;
@@ -303,6 +305,24 @@ export async function processListing(
         relatedArtistId: headliner.id,
         createdBy: "pipeline",
       });
+    }
+  }
+
+  // Not every seller gives an event its own photo (see
+  // declassifyGenericImages above) — fall back to a free-licensed photo of
+  // the headliner from Wikimedia Commons, with credit + license, per
+  // CLAUDE.md's "Artist images: Wikimedia Commons" rule. A factual lookup
+  // against a specific named source, not an AI judgment call, so unlike
+  // genre suggestions this applies directly rather than going through
+  // admin review. Only attempted once per artist (skipped if already set).
+  const [artistRow] = await db.select({ imageUrl: artists.imageUrl }).from(artists).where(eq(artists.id, headliner.id)).limit(1);
+  if (artistRow && !artistRow.imageUrl) {
+    const found = await findArtistImage(parsedTitle.artistNames[0]);
+    if (found) {
+      await db
+        .update(artists)
+        .set({ imageUrl: found.imageUrl, imageCredit: found.imageCredit, imageLicense: found.imageLicense })
+        .where(eq(artists.id, headliner.id));
     }
   }
 

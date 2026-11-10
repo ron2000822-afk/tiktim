@@ -28,6 +28,8 @@ export type EventCardData = {
   minPrice: string | null;
   maxPrice: string | null;
   imageUrl: string | null;
+  artistImageUrl: string | null;
+  artistImageCredit: string | null;
   tags: string[];
   isFeatured: boolean;
   venueName: string;
@@ -51,6 +53,8 @@ export const eventCardSelection = {
   minPrice: events.minPrice,
   maxPrice: events.maxPrice,
   imageUrl: events.imageUrl,
+  artistImageUrl: artists.imageUrl,
+  artistImageCredit: artists.imageCredit,
   tags: events.tags,
   isFeatured: events.isFeatured,
   firstSeenAt: events.firstSeenAt,
@@ -303,6 +307,7 @@ export async function getEventByShortId(shortId: string) {
       artistSlug: artists.slug,
       artistImageUrl: artists.imageUrl,
       artistImageCredit: artists.imageCredit,
+      artistImageLicense: artists.imageLicense,
       genreSlug: primaryGenre.slug,
     })
     .from(events)

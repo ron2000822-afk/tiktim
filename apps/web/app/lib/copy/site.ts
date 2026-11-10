@@ -50,6 +50,7 @@ export const EVENT_CARD_COPY = {
   sponsored: "ממומן",
   new: "חדש",
   priceFallback: "מחיר לא ידוע",
+  photoCredit: (credit: string) => `תמונה: ${credit}, Wikimedia Commons`,
 };
 
 export const RAIL_COPY = {

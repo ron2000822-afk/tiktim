@@ -17,6 +17,12 @@ export function EventCard({
 }) {
   const href = `/event/${event.slug}-${event.shortId}`;
   const priceLabel = formatPriceFrom(event.minPrice) ?? EVENT_CARD_COPY.priceFallback;
+  // Not every seller gives an event its own photo — fall back to the
+  // artist's Wikimedia Commons photo (see packages/ingest's
+  // find-artist-image.ts), which needs its own credit line per Commons'
+  // license terms, unlike a seller-provided event photo.
+  const displayImageUrl = event.imageUrl ?? event.artistImageUrl;
+  const isArtistFallbackImage = !event.imageUrl && !!event.artistImageUrl;
 
   return (
     <article className={`relative ${variant === "rail" ? "w-56 shrink-0 snap-start sm:w-64" : ""}`}>
@@ -37,14 +43,19 @@ export function EventCard({
         <div
           className="relative flex aspect-[4/5] items-end p-3"
           style={
-            event.imageUrl
-              ? { backgroundImage: `url(${event.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            displayImageUrl
+              ? { backgroundImage: `url(${displayImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
               : { background: `linear-gradient(160deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }
           }
         >
-          {!event.imageUrl && (
+          {!displayImageUrl && (
             <span className="text-2xl font-extrabold leading-tight text-[var(--background)]/90">
               {event.artistNameHe}
+            </span>
+          )}
+          {isArtistFallbackImage && event.artistImageCredit && (
+            <span className="absolute bottom-1 start-1 rounded bg-black/50 px-1 text-[10px] text-[var(--background)]">
+              {EVENT_CARD_COPY.photoCredit(event.artistImageCredit)}
             </span>
           )}
         </div>

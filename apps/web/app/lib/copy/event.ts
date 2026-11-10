@@ -25,4 +25,5 @@ export const EVENT_PAGE_COPY = {
   pastEvent: "האירוע חלף",
   pastEventBody: "ההופעה הזו כבר התקיימה. הנה התאריכים הקרובים של האמן.",
   noOffers: "אין כרגע הצעות זמינות להופעה הזו.",
+  photoCredit: (credit: string) => `תמונה: ${credit}, Wikimedia Commons`,
 };

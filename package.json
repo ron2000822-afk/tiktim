@@ -16,6 +16,7 @@
     "db:migrate": "pnpm --filter @tiktim/db db:migrate",
     "db:seed": "pnpm --filter @tiktim/db db:seed",
     "ingest": "pnpm --filter @tiktim/ingest start",
+    "backfill-artist-images": "pnpm --filter @tiktim/ingest backfill-images",
     "send-emails": "pnpm --filter @tiktim/emails send"
   },
   "devDependencies": {

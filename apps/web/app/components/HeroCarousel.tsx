@@ -30,6 +30,10 @@ export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardDa
   if (events.length === 0) return null;
   const event = events[index];
   const href = `/event/${event.slug}-${event.shortId}`;
+  // Not every seller gives an event its own photo — fall back to the
+  // artist's Wikimedia Commons photo, which needs its own credit line.
+  const displayImageUrl = event.imageUrl ?? event.artistImageUrl;
+  const isArtistFallbackImage = !event.imageUrl && !!event.artistImageUrl;
 
   return (
     <section
@@ -43,9 +47,16 @@ export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardDa
       <Link
         href={href}
         className="relative flex min-h-64 items-end p-6 sm:min-h-80 sm:p-10"
-        style={{ background: `linear-gradient(135deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }}
+        style={
+          displayImageUrl
+            ? { backgroundImage: `url(${displayImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : { background: `linear-gradient(135deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }
+        }
       >
-        <div className="max-w-xl space-y-2 text-[var(--background)]">
+        {displayImageUrl && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" aria-hidden="true" />
+        )}
+        <div className="relative max-w-xl space-y-2 text-[var(--background)]">
           {event.id === sponsoredEventId && (
             <span className="inline-block rounded-full bg-[var(--background)]/80 px-2 py-0.5 text-xs font-semibold">
               {EVENT_CARD_COPY.sponsored}
@@ -58,6 +69,11 @@ export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardDa
           </p>
           <p className="text-xl font-bold">{formatPriceFrom(event.minPrice) ?? EVENT_CARD_COPY.priceFallback}</p>
         </div>
+        {isArtistFallbackImage && event.artistImageCredit && (
+          <span className="absolute bottom-2 start-2 rounded bg-black/50 px-1.5 py-0.5 text-xs text-[var(--background)]">
+            {EVENT_CARD_COPY.photoCredit(event.artistImageCredit)}
+          </span>
+        )}
       </Link>
 
       {events.length > 1 && (

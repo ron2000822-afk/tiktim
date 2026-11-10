@@ -62,6 +62,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       : Promise.resolve([]),
   ]);
 
+  // Not every seller gives an event its own photo — fall back to the
+  // artist's Wikimedia Commons photo, which needs its own credit line per
+  // Commons' license terms, unlike a seller-provided event photo.
+  const displayImageUrl = event.imageUrl ?? event.artistImageUrl;
+  const isArtistFallbackImage = !event.imageUrl && !!event.artistImageUrl;
+
   const eventUrl = `https://tiktim.co.il/event/${canonicalSlug}`;
   const whatsappText = encodeURIComponent(`${event.artistNameHe} - ${event.venueName}, ${event.cityNameHe}\n${eventUrl}`);
   const wazeUrl = event.venueLat && event.venueLng ? `https://waze.com/ul?ll=${event.venueLat},${event.venueLng}&navigate=yes` : null;
@@ -108,8 +114,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       <div
         className="relative flex min-h-56 items-end rounded-[var(--radius-card)] p-6"
         style={
-          event.imageUrl
-            ? { backgroundImage: `url(${event.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+          displayImageUrl
+            ? { backgroundImage: `url(${displayImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
             : { background: `linear-gradient(135deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }
         }
       >
@@ -121,6 +127,11 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           <h1 className="text-3xl font-extrabold sm:text-4xl">{event.artistNameHe}</h1>
           {event.tourName && <p className="text-lg opacity-90">{event.tourName}</p>}
         </div>
+        {isArtistFallbackImage && event.artistImageCredit && (
+          <span className="absolute bottom-2 start-2 rounded bg-black/50 px-1.5 py-0.5 text-xs text-[var(--background)]">
+            {EVENT_PAGE_COPY.photoCredit(event.artistImageCredit)}
+          </span>
+        )}
       </div>
 
       {isPast && (
