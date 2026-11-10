@@ -41,8 +41,16 @@ type CommonsImageInfoResponse = {
   };
 };
 
-function stripHtml(value: string): string {
-  return value.replace(/<[^>]+>/g, "").trim();
+const MAX_CREDIT_LENGTH = 60;
+
+// Commons' `Artist` field is meant to hold a name, but plenty of uploads
+// put a full attribution paragraph there instead (seen live: one file's
+// "credit" was several sentences of usage instructions). Strip markup,
+// collapse whitespace/newlines, and cap the length — this is rendered as
+// a short badge on an event card, not a block of text.
+function cleanCredit(value: string): string {
+  const stripped = value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return stripped.length > MAX_CREDIT_LENGTH ? `${stripped.slice(0, MAX_CREDIT_LENGTH - 1).trimEnd()}…` : stripped;
 }
 
 async function getImageAttribution(imageUrl: string): Promise<{ credit: string; license: string } | null> {
@@ -63,8 +71,8 @@ async function getImageAttribution(imageUrl: string): Promise<{ credit: string; 
   const meta = page?.imageinfo?.[0]?.extmetadata;
   if (!meta) return null;
 
-  const artist = meta.Artist?.value ? stripHtml(meta.Artist.value) : null;
-  const credit = meta.Credit?.value ? stripHtml(meta.Credit.value) : null;
+  const artist = meta.Artist?.value ? cleanCredit(meta.Artist.value) : null;
+  const credit = meta.Credit?.value ? cleanCredit(meta.Credit.value) : null;
   const license = meta.LicenseShortName?.value ?? null;
   if (!license) return null; // No license metadata — don't use an image we can't attribute correctly.
 
