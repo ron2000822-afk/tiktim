@@ -1,13 +1,21 @@
 type JsonLdNode = Record<string, unknown>;
 
 const EVENT_TYPES = new Set(["Event", "MusicEvent", "ComedyEvent", "TheaterEvent", "Festival", "SocialEvent"]);
+const SERIES_TYPES = new Set(["EventSeries"]);
+
+function hasType(node: JsonLdNode, types: Set<string>): boolean {
+  const type = node["@type"];
+  if (typeof type === "string") return types.has(type);
+  if (Array.isArray(type)) return type.some((t) => typeof t === "string" && types.has(t));
+  return false;
+}
 
 function isEventNode(node: unknown): node is JsonLdNode {
-  if (typeof node !== "object" || node === null) return false;
-  const type = (node as JsonLdNode)["@type"];
-  if (typeof type === "string") return EVENT_TYPES.has(type);
-  if (Array.isArray(type)) return type.some((t) => typeof t === "string" && EVENT_TYPES.has(t));
-  return false;
+  return typeof node === "object" && node !== null && hasType(node as JsonLdNode, EVENT_TYPES);
+}
+
+function isSeriesNode(node: unknown): node is JsonLdNode {
+  return typeof node === "object" && node !== null && hasType(node as JsonLdNode, SERIES_TYPES);
 }
 
 function flattenGraph(parsed: unknown): JsonLdNode[] {
@@ -20,20 +28,38 @@ function flattenGraph(parsed: unknown): JsonLdNode[] {
   return [];
 }
 
-/** Extracts every schema.org Event-like node from all `<script type="application/ld+json">` blocks in `html`. */
+/**
+ * An `EventSeries` (e.g. an artist's "all upcoming shows" page — confirmed
+ * live on zappa-club.co.il) embeds each actual performance as a plain Event
+ * node in its `subEvent` field rather than listing the series itself as a
+ * bookable item — each subEvent is pulled out as its own listing.
+ */
+function expandEventSeries(nodes: JsonLdNode[]): JsonLdNode[] {
+  const expanded: JsonLdNode[] = [];
+  for (const node of nodes) {
+    if (isEventNode(node)) expanded.push(node);
+    if (isSeriesNode(node)) {
+      const subEvents = Array.isArray(node.subEvent) ? (node.subEvent as unknown[]) : node.subEvent ? [node.subEvent] : [];
+      expanded.push(...subEvents.filter(isEventNode));
+    }
+  }
+  return expanded;
+}
+
+/** Extracts every schema.org Event-like node (including EventSeries subEvents) from all `<script type="application/ld+json">` blocks in `html`. */
 export function extractEventJsonLd(html: string): JsonLdNode[] {
-  const events: JsonLdNode[] = [];
+  const allNodes: JsonLdNode[] = [];
   const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 
   for (const match of html.matchAll(scriptRegex)) {
     try {
       const parsed = JSON.parse(match[1]);
-      events.push(...flattenGraph(parsed).filter(isEventNode));
+      allNodes.push(...flattenGraph(parsed));
     } catch {
       // Malformed JSON-LD on the page — skip this block, not the whole page.
     }
   }
-  return events;
+  return expandEventSeries(allNodes);
 }
 
 function firstString(value: unknown): string | undefined {
@@ -77,20 +103,29 @@ function toNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function asNodeArray(value: unknown): JsonLdNode[] {
+  if (Array.isArray(value)) return value as JsonLdNode[];
+  if (value && typeof value === "object") return [value as JsonLdNode];
+  return [];
+}
+
 /**
  * Extracts a price range from a schema.org Event's `offers`, which may be a
  * single Offer, an AggregateOffer (lowPrice/highPrice), or an array of
- * either — ticket sites commonly list one Offer per price tier.
+ * either — ticket sites commonly list one Offer per price tier. Some
+ * platforms (Eventim-powered sites: Zappa, Eventim Israel) nest the actual
+ * priced Offer two levels down, inside an AggregateOffer's
+ * `itemOffered.offers` — confirmed live on zappa-club.co.il — so each
+ * offer is also checked for a nested itemOffered before giving up on it.
  */
 export function extractPriceRange(event: JsonLdNode): { min: number; max: number; currency?: string } | null {
-  const rawOffers = event.offers;
-  const offers = Array.isArray(rawOffers) ? (rawOffers as JsonLdNode[]) : rawOffers ? [rawOffers as JsonLdNode] : [];
+  const offers = asNodeArray(event.offers);
   if (offers.length === 0) return null;
 
   const prices: number[] = [];
   let currency: string | undefined;
 
-  for (const offer of offers) {
+  const collectFrom = (offer: JsonLdNode) => {
     const low = toNumber(offer.lowPrice);
     const high = toNumber(offer.highPrice);
     const single = toNumber(offer.price);
@@ -98,6 +133,14 @@ export function extractPriceRange(event: JsonLdNode): { min: number; max: number
     if (high !== undefined) prices.push(high);
     if (low === undefined && high === undefined && single !== undefined) prices.push(single);
     currency ??= firstString(offer.priceCurrency);
+  };
+
+  for (const offer of offers) {
+    collectFrom(offer);
+    const itemOffered = asNodeArray(offer.itemOffered);
+    for (const item of itemOffered) {
+      for (const nested of asNodeArray(item.offers)) collectFrom(nested);
+    }
   }
 
   if (prices.length === 0) return null;

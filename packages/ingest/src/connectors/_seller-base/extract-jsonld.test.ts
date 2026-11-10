@@ -8,6 +8,7 @@ import { extractEventJsonLd, extractPriceRange, mapJsonLdEventToListingFields } 
 // identifiers replaced by a neutral example domain rather than scraping a
 // specific competitor's page into our test fixtures.
 const html = readFileSync(join(__dirname, "../__fixtures__/jsonld-comedy-event.html"), "utf-8");
+const eventSeriesHtml = readFileSync(join(__dirname, "../__fixtures__/zappa/yuval-dayan-eventseries.html"), "utf-8");
 
 describe("extractEventJsonLd", () => {
   it("finds the Event node inside an @graph, ignoring non-event nodes", () => {
@@ -23,6 +24,13 @@ describe("extractEventJsonLd", () => {
   it("skips malformed JSON-LD without throwing", () => {
     const broken = `<script type="application/ld+json">{not valid json</script>`;
     expect(extractEventJsonLd(broken)).toEqual([]);
+  });
+
+  it("expands an EventSeries' subEvent array into individual listings (confirmed live on zappa-club.co.il's artist pages)", () => {
+    const events = extractEventJsonLd(eventSeriesHtml);
+    expect(events).toHaveLength(3);
+    expect(events.every((e) => e["@type"] === "MusicEvent")).toBe(true);
+    expect(events.map((e) => (e.location as Record<string, unknown>).name)).toEqual(["זאפה חיפה", "זאפה ירושלים", "זאפה הרצליה"]);
   });
 });
 
@@ -69,6 +77,23 @@ describe("extractPriceRange", () => {
 
   it("returns null when there are no offers", () => {
     expect(extractPriceRange({})).toBeNull();
+  });
+
+  it("finds a price nested two levels down in itemOffered.offers (confirmed live on zappa-club.co.il)", () => {
+    const event = {
+      offers: [
+        {
+          "@type": "AggregateOffer",
+          priceCurrency: "ILS",
+          availability: "https://schema.org/InStock",
+          itemOffered: {
+            "@type": "Product",
+            offers: [{ "@type": "Offer", category: "ישיבה לא מסומן", price: "159.00", priceCurrency: "ILS" }],
+          },
+        },
+      ],
+    };
+    expect(extractPriceRange(event)).toEqual({ min: 159, max: 159, currency: "ILS" });
   });
 
   it("returns null when the Offer has no price, low/high price fields", () => {
