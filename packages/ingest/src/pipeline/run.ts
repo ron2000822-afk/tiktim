@@ -461,6 +461,15 @@ export async function runPipeline(connector: Connector, opts: { dryRun?: boolean
 
       if (!normalized) continue;
 
+      if (normalized.priceMin === undefined && connector.enrichPrice) {
+        const enriched = await connector.enrichPrice(normalized);
+        if (enriched) {
+          normalized.priceMin = enriched.priceMin;
+          normalized.priceMax = enriched.priceMax;
+          normalized.currency = enriched.currency;
+        }
+      }
+
       const outcome = await processListing(normalized, source, connector);
       if (outcome === "created") created++;
       else if (outcome === "merged") merged++;

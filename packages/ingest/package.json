@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "start": "tsx src/index.ts",
-    "backfill-images": "tsx src/backfill-artist-images.ts"
+    "backfill-images": "tsx src/backfill-artist-images.ts",
+    "backfill-prices": "tsx src/backfill-ticketmaster-prices.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",

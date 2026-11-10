@@ -1,4 +1,6 @@
 import { fetchWithRetry, RateLimiter, USER_AGENT } from "../lib/http";
+import { isAllowedByRobots, getCrawlDelayMs } from "./_seller-base/robots";
+import { extractEventJsonLd, extractPriceRange } from "./_seller-base/extract-jsonld";
 import type { Connector, NormalizedListing, RawItem } from "./types";
 
 const API_BASE = "https://app.ticketmaster.com/discovery/v2/events.json";
@@ -9,6 +11,15 @@ const MONTHS_AHEAD = 4;
 // Keeps calls comfortably under the 5,000/day account quota even if run
 // more than once in a day.
 const rateLimiter = new RateLimiter(250);
+
+// Ticketmaster's Discovery API (events.json) omits priceRanges for most
+// Israeli listings — confirmed live, not a parsing bug. The event's own
+// public page embeds a real price in schema.org JSON-LD instead, so
+// enrichPrice() reads that page directly when the API gave us nothing.
+// A fixed 1.5s/request pace is already well beyond any Crawl-delay
+// ticketmaster.co.il's robots.txt declares (checked: none set).
+const PRICE_PAGE_MIN_INTERVAL_MS = 1500;
+const priceRateLimiter = new RateLimiter(PRICE_PAGE_MIN_INTERVAL_MS);
 
 type TmImage = { url: string; width: number; height: number; ratio?: string };
 type TmVenue = { name?: string; city?: { name?: string }; address?: { line1?: string }; location?: { latitude?: string; longitude?: string } };
@@ -184,5 +195,32 @@ export const ticketmasterConnector: Connector = {
     impactUrl.searchParams.set("camp", campaignId);
     impactUrl.searchParams.set("url", url);
     return impactUrl.toString();
+  },
+
+  async enrichPrice(listing) {
+    try {
+      const parsed = new URL(listing.url);
+      const allowed = await isAllowedByRobots(parsed.origin, parsed.pathname);
+      if (!allowed) return null;
+
+      const declaredCrawlDelayMs = await getCrawlDelayMs(parsed.origin);
+      if (declaredCrawlDelayMs && declaredCrawlDelayMs > PRICE_PAGE_MIN_INTERVAL_MS) {
+        await new Promise((resolve) => setTimeout(resolve, declaredCrawlDelayMs - PRICE_PAGE_MIN_INTERVAL_MS));
+      }
+
+      const response = await fetchWithRetry(listing.url, { rateLimiter: priceRateLimiter, maxRetries: 1 });
+      if (!response.ok) return null;
+
+      const html = await response.text();
+      const [eventNode] = extractEventJsonLd(html);
+      if (!eventNode) return null;
+
+      const priceRange = extractPriceRange(eventNode);
+      if (!priceRange) return null;
+
+      return { priceMin: priceRange.min, priceMax: priceRange.max, currency: priceRange.currency };
+    } catch {
+      return null;
+    }
   },
 };

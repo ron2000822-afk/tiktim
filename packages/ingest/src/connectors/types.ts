@@ -34,4 +34,8 @@ export interface Connector {
   fetch(opts: { since?: Date; limit?: number; signal: AbortSignal }): AsyncIterable<RawItem>;
   normalize(item: RawItem): NormalizedListing | null; // null = skip (e.g. not music/standup)
   buildAffiliateUrl?(url: string, config: Record<string, unknown>): string;
+  // Optional: called only when normalize() didn't already get a price (the
+  // feed API omitted it). Reads the listing's own public page for a price
+  // the API doesn't expose. Must fail soft — return null, never throw.
+  enrichPrice?(listing: NormalizedListing): Promise<{ priceMin: number; priceMax: number; currency?: string } | null>;
 }

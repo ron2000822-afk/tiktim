@@ -70,3 +70,36 @@ function mapEventStatus(schemaStatus: string | undefined): "scheduled" | "postpo
   if (schemaStatus.endsWith("EventScheduled")) return "scheduled";
   return undefined;
 }
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) return Number(value);
+  return undefined;
+}
+
+/**
+ * Extracts a price range from a schema.org Event's `offers`, which may be a
+ * single Offer, an AggregateOffer (lowPrice/highPrice), or an array of
+ * either — ticket sites commonly list one Offer per price tier.
+ */
+export function extractPriceRange(event: JsonLdNode): { min: number; max: number; currency?: string } | null {
+  const rawOffers = event.offers;
+  const offers = Array.isArray(rawOffers) ? (rawOffers as JsonLdNode[]) : rawOffers ? [rawOffers as JsonLdNode] : [];
+  if (offers.length === 0) return null;
+
+  const prices: number[] = [];
+  let currency: string | undefined;
+
+  for (const offer of offers) {
+    const low = toNumber(offer.lowPrice);
+    const high = toNumber(offer.highPrice);
+    const single = toNumber(offer.price);
+    if (low !== undefined) prices.push(low);
+    if (high !== undefined) prices.push(high);
+    if (low === undefined && high === undefined && single !== undefined) prices.push(single);
+    currency ??= firstString(offer.priceCurrency);
+  }
+
+  if (prices.length === 0) return null;
+  return { min: Math.min(...prices), max: Math.max(...prices), currency };
+}

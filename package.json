@@ -17,6 +17,7 @@
     "db:seed": "pnpm --filter @tiktim/db db:seed",
     "ingest": "pnpm --filter @tiktim/ingest start",
     "backfill-artist-images": "pnpm --filter @tiktim/ingest backfill-images",
+    "backfill-ticketmaster-prices": "pnpm --filter @tiktim/ingest backfill-prices",
     "send-emails": "pnpm --filter @tiktim/emails send"
   },
   "devDependencies": {

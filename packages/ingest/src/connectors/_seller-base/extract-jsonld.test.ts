@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { extractEventJsonLd, mapJsonLdEventToListingFields } from "./extract-jsonld";
+import { extractEventJsonLd, extractPriceRange, mapJsonLdEventToListingFields } from "./extract-jsonld";
 
 // Structurally identical to real-world schema.org Event JSON-LD (the
 // @graph + ComedyEvent shape Israeli ticket sites commonly embed), with
@@ -42,5 +42,37 @@ describe("mapJsonLdEventToListingFields", () => {
     });
     expect(fields.lat).toBeCloseTo(32.0851786);
     expect(fields.lng).toBeCloseTo(34.8724796);
+  });
+});
+
+describe("extractPriceRange", () => {
+  it("reads a single Offer's price as both min and max", () => {
+    const event = { offers: { "@type": "Offer", price: "229", priceCurrency: "ILS" } };
+    expect(extractPriceRange(event)).toEqual({ min: 229, max: 229, currency: "ILS" });
+  });
+
+  it("reads lowPrice/highPrice from an AggregateOffer", () => {
+    const event = { offers: { "@type": "AggregateOffer", lowPrice: "100", highPrice: "300", priceCurrency: "ILS" } };
+    expect(extractPriceRange(event)).toEqual({ min: 100, max: 300, currency: "ILS" });
+  });
+
+  it("takes the min and max across an array of per-tier Offers", () => {
+    const event = {
+      offers: [
+        { "@type": "Offer", price: 150, priceCurrency: "ILS" },
+        { "@type": "Offer", price: 450, priceCurrency: "ILS" },
+        { "@type": "Offer", price: 300, priceCurrency: "ILS" },
+      ],
+    };
+    expect(extractPriceRange(event)).toEqual({ min: 150, max: 450, currency: "ILS" });
+  });
+
+  it("returns null when there are no offers", () => {
+    expect(extractPriceRange({})).toBeNull();
+  });
+
+  it("returns null when the Offer has no price, low/high price fields", () => {
+    const event = { offers: { "@type": "Offer", priceCurrency: "ILS", availability: "https://schema.org/InStock" } };
+    expect(extractPriceRange(event)).toBeNull();
   });
 });
