@@ -1,6 +1,6 @@
 const TZ = "Asia/Jerusalem";
 
-function getJerusalemYMD(date: Date): { year: number; month: number; day: number } {
+export function getJerusalemYMD(date: Date): { year: number; month: number; day: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
     year: "numeric",
@@ -35,7 +35,7 @@ function tzOffsetMinutes(date: Date): number {
 }
 
 /** Converts a Jerusalem-local wall-clock time to the correct UTC instant (DST-safe). */
-function zonedTimeToUtc(year: number, month: number, day: number, hour: number, minute: number, second: number): Date {
+export function zonedTimeToUtc(year: number, month: number, day: number, hour: number, minute: number, second: number): Date {
   const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
   const offset = tzOffsetMinutes(utcGuess);
   return new Date(utcGuess.getTime() - offset * 60000);
