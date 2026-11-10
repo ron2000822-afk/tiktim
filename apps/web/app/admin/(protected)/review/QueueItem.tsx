@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import {
+  approveArtistImageSuggestion,
   approveGenreSuggestion,
   approveSubmission,
   approveUnverifiedArtist,
@@ -28,6 +29,7 @@ const KIND_LABELS: Record<string, string> = {
   submission: "הצעת מופע ממפיק",
   error_report: "דיווח שגיאה",
   low_confidence_event: "הופעה בביטחון נמוך",
+  artist_image_suggestion: "הצעת תמונה לאמן",
 };
 
 export function QueueItem({ row }: { row: ReviewRow }) {
@@ -51,9 +53,32 @@ export function QueueItem({ row }: { row: ReviewRow }) {
         </span>
       </div>
 
-      <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs text-[var(--text-muted)]" dir="ltr">
-        {JSON.stringify(payload, null, 2)}
-      </pre>
+      {row.kind === "artist_image_suggestion" && typeof payload.imageUrl === "string" ? (
+        <div className="flex items-start gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- admin-only preview of an arbitrary external Commons URL, not a site asset */}
+          <img
+            src={payload.imageUrl}
+            alt=""
+            className="h-24 w-24 rounded-[var(--radius-button)] border border-[var(--border)] object-cover"
+          />
+          <div className="space-y-1 text-sm">
+            <p>
+              <span className="text-[var(--text-muted)]">אמן: </span>
+              <span className="font-semibold">{String(payload.artistName ?? "—")}</span>
+            </p>
+            <p className="text-[var(--text-muted)]">
+              נמצא בעמוד ויקיפדיה: <span dir="ltr">{String(payload.matchedTitle ?? "—")}</span>
+            </p>
+            <p className="text-[var(--text-muted)]">
+              קרדיט: {String(payload.imageCredit ?? "—")} ({String(payload.imageLicense ?? "—")})
+            </p>
+          </div>
+        </div>
+      ) : (
+        <pre className="overflow-x-auto whitespace-pre-wrap break-words text-xs text-[var(--text-muted)]" dir="ltr">
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+      )}
 
       <div className="flex flex-wrap gap-2 pt-1">
         {row.kind === "unmatched_artist" && row.relatedArtistId && (
@@ -126,6 +151,29 @@ export function QueueItem({ row }: { row: ReviewRow }) {
             פרסם הופעה
           </button>
         )}
+
+        {row.kind === "artist_image_suggestion" &&
+          row.relatedArtistId &&
+          typeof payload.imageUrl === "string" &&
+          typeof payload.imageCredit === "string" &&
+          typeof payload.imageLicense === "string" && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                run(() =>
+                  approveArtistImageSuggestion(row.id, row.relatedArtistId!, {
+                    imageUrl: payload.imageUrl as string,
+                    imageCredit: payload.imageCredit as string,
+                    imageLicense: payload.imageLicense as string,
+                  }),
+                )
+              }
+              className="rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-[var(--background)]"
+            >
+              אשר תמונה
+            </button>
+          )}
 
         <button
           type="button"

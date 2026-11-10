@@ -5,13 +5,27 @@ import { fetchWithRetry, RateLimiter } from "../lib/http";
 // new artist, not per listing, so a conservative pace costs little.
 const rateLimiter = new RateLimiter(1000);
 
-export type ArtistImageResult = { imageUrl: string; imageCredit: string; imageLicense: string };
+export type ArtistImageMatch = {
+  imageUrl: string;
+  imageCredit: string;
+  imageLicense: string;
+  matchedTitle: string;
+  // "exact": the artist's own name is the real Wikipedia page title —
+  // applied directly, same trust level as a seller-provided event photo.
+  // "search": found via Wikipedia's free-text search because no exact
+  // title matched. Confirmed live this carries real risk of matching the
+  // wrong specific person (not just the wrong entity type) — e.g. "Shai
+  // Zalman" resolving to "Shneur Zalman of Liadi", an 18th-century rabbi.
+  // Callers must route this through admin review, never auto-apply it.
+  confidence: "exact" | "search";
+};
 
 type WikiPageImageResponse = {
   query?: {
     pages?: Record<
       string,
       {
+        title?: string;
         original?: { source?: string };
         pageprops?: { disambiguation?: string; "wikibase-shortdesc"?: string };
       }
@@ -28,29 +42,32 @@ type WikiPageImageResponse = {
 // real disambiguation pages and this kind of list page.
 const NON_PERSON_SHORTDESC = /name list|given name|surname|disambiguation/i;
 
-// Tried a Wikipedia-search-based fallback for names that don't exactly
-// match a page title (e.g. "Hanan Yovel" has no Hebrew Wikipedia page
-// under that exact Latin-script title). Reverted — verified live that
-// the top search result is unreliable enough to actively cause harm:
-// "Shai Zalman" matched "Shneur Zalman of Liadi" (an 18th-century rabbi),
-// "Maor Cohen" matched a TV show page, "Tamir Greenberg" matched a
-// different historical poet. A wrong photo confidently shown under a
-// real artist's name is worse than no photo — exact-title matching only,
-// same as the disambiguation lesson from "Nasrin".
-async function getPageImage(wiki: "he" | "en", title: string): Promise<string | null> {
+async function fetchPageImage(wiki: "he" | "en", title: string): Promise<{ imageUrl: string; matchedTitle: string } | null> {
   const url = `https://${wiki}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages|pageprops&piprop=original&titles=${encodeURIComponent(title)}&redirects=1`;
   const res = await fetchWithRetry(url, { rateLimiter });
   if (!res.ok) return null;
   const data = (await res.json()) as WikiPageImageResponse;
   const page = Object.values(data.query?.pages ?? {})[0];
-  if (!page) return null;
+  if (!page || !page.original?.source) return null;
 
   const shortdesc = page.pageprops?.["wikibase-shortdesc"];
   if (page.pageprops?.disambiguation !== undefined || (shortdesc && NON_PERSON_SHORTDESC.test(shortdesc))) {
     return null;
   }
 
-  return page.original?.source ?? null;
+  return { imageUrl: page.original.source, matchedTitle: page.title ?? title };
+}
+
+type WikiSearchResponse = {
+  query?: { search?: { title: string }[] };
+};
+
+async function searchTopPageTitle(wiki: "he" | "en", query: string): Promise<string | null> {
+  const url = `https://${wiki}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1`;
+  const res = await fetchWithRetry(url, { rateLimiter });
+  if (!res.ok) return null;
+  const data = (await res.json()) as WikiSearchResponse;
+  return data.query?.search?.[0]?.title ?? null;
 }
 
 type CommonsImageInfoResponse = {
@@ -119,22 +136,53 @@ async function getImageAttribution(imageUrl: string): Promise<{ credit: string; 
  * Looks up a free-licensed photo of a performer via Wikipedia's lead image
  * (sourced from Wikimedia Commons), with photographer credit + license —
  * per CLAUDE.md's "Artist images: Wikimedia Commons with license +
- * photographer credit" rule. Tries Hebrew Wikipedia first (most Israeli
- * performers), then English. Returns null (never throws) on any miss or
- * failure — callers treat that as "no image found", not an error; this is
- * a best-effort enrichment step, not a required part of ingestion.
+ * photographer credit" rule. Tries an exact title match on Hebrew
+ * Wikipedia, then English; if neither has one, falls back to each wiki's
+ * search and uses the top hit. Returns null (never throws) on any miss or
+ * failure — callers treat that as "no image found", not an error.
+ *
+ * Exact-title matches are safe to apply directly. Search-based matches are
+ * NOT — verified live that free-text search can resolve to a completely
+ * different real person (not just a disambiguation page); callers must
+ * route `confidence: "search"` results through admin review.
  */
-export async function findArtistImage(artistName: string): Promise<ArtistImageResult | null> {
+export async function findArtistImage(artistName: string): Promise<ArtistImageMatch | null> {
   try {
     for (const wiki of ["he", "en"] as const) {
-      const imageUrl = await getPageImage(wiki, artistName);
-      if (!imageUrl) continue;
+      const exact = await fetchPageImage(wiki, artistName);
+      if (exact) {
+        const attribution = await getImageAttribution(exact.imageUrl);
+        if (attribution) {
+          return {
+            imageUrl: exact.imageUrl,
+            matchedTitle: exact.matchedTitle,
+            confidence: "exact",
+            imageCredit: attribution.credit,
+            imageLicense: attribution.license,
+          };
+        }
+      }
+    }
 
-      const attribution = await getImageAttribution(imageUrl);
+    for (const wiki of ["he", "en"] as const) {
+      const topHit = await searchTopPageTitle(wiki, artistName);
+      if (!topHit || topHit === artistName) continue;
+
+      const found = await fetchPageImage(wiki, topHit);
+      if (!found) continue;
+
+      const attribution = await getImageAttribution(found.imageUrl);
       if (!attribution) continue;
 
-      return { imageUrl, imageCredit: attribution.credit, imageLicense: attribution.license };
+      return {
+        imageUrl: found.imageUrl,
+        matchedTitle: found.matchedTitle,
+        confidence: "search",
+        imageCredit: attribution.credit,
+        imageLicense: attribution.license,
+      };
     }
+
     return null;
   } catch {
     return null;

@@ -40,6 +40,8 @@ describe("findArtistImage", () => {
       imageUrl: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Some_Artist.jpg?utm_source=he.wikipedia.org",
       imageCredit: "Jane Photographer",
       imageLicense: "CC BY-SA 3.0",
+      matchedTitle: "עידן רייכל",
+      confidence: "exact",
     });
   });
 
@@ -67,6 +69,49 @@ describe("findArtistImage", () => {
       imageUrl: "https://upload.wikimedia.org/wikipedia/commons/b/bc/EN_Artist.jpg",
       imageCredit: "Wikimedia Commons",
       imageLicense: "CC BY 4.0",
+      matchedTitle: "Some International Artist",
+      confidence: "exact",
+    });
+  });
+
+  it("falls back to full-text search when no exact-title page exists, flagged as confidence: search", async () => {
+    fetchWithRetryMock.mockImplementation(async (url: string) => {
+      if (url.includes("list=search")) {
+        if (url.includes("he.wikipedia.org")) {
+          return jsonResponse({ query: { search: [{ title: "שי זלמן (זמר)" }] } });
+        }
+        throw new Error(`unexpected search url: ${url}`);
+      }
+      if (url.includes("en.wikipedia.org")) {
+        // exact-title lookup on the English wiki for the raw artist name — no page.
+        return jsonResponse({ query: { pages: { "-1": {} } } });
+      }
+      if (url.includes("he.wikipedia.org")) {
+        if (url.includes(encodeURIComponent("שי זלמן (זמר)"))) {
+          // exact-title lookup for the search-matched title — has a page image.
+          return jsonResponse({
+            query: { pages: { "1": { title: "שי זלמן (זמר)", original: { source: "https://upload.wikimedia.org/wikipedia/commons/d/de/Shai.jpg" } } } },
+          });
+        }
+        // exact-title lookup for the raw artist name — no page.
+        return jsonResponse({ query: { pages: { "-1": {} } } });
+      }
+      if (url.includes("commons.wikimedia.org")) {
+        return jsonResponse({
+          query: { pages: { "2": { imageinfo: [{ extmetadata: { Artist: { value: "Some Photographer" }, LicenseShortName: { value: "CC BY 2.0" } } }] } } },
+        });
+      }
+      throw new Error(`unexpected url: ${url}`);
+    });
+
+    const result = await findArtistImage("שי זלמן");
+
+    expect(result).toEqual({
+      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/de/Shai.jpg",
+      imageCredit: "Some Photographer",
+      imageLicense: "CC BY 2.0",
+      matchedTitle: "שי זלמן (זמר)",
+      confidence: "search",
     });
   });
 

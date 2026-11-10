@@ -311,18 +311,42 @@ export async function processListing(
   // Not every seller gives an event its own photo (see
   // declassifyGenericImages above) — fall back to a free-licensed photo of
   // the headliner from Wikimedia Commons, with credit + license, per
-  // CLAUDE.md's "Artist images: Wikimedia Commons" rule. A factual lookup
-  // against a specific named source, not an AI judgment call, so unlike
-  // genre suggestions this applies directly rather than going through
-  // admin review. Only attempted once per artist (skipped if already set).
-  const [artistRow] = await db.select({ imageUrl: artists.imageUrl }).from(artists).where(eq(artists.id, headliner.id)).limit(1);
+  // CLAUDE.md's "Artist images: Wikimedia Commons" rule. An exact-title
+  // match is a factual lookup against a specific named source and applies
+  // directly, same as genre suggestions don't — but a search-based match
+  // (no exact title found) is confirmed live to sometimes resolve to a
+  // completely different real person, so that tier goes through admin
+  // review instead of auto-applying. Only attempted once per artist
+  // (skipped if an image, or an unresolved suggestion, already exists).
+  const [artistRow] = await db.select({ nameHe: artists.nameHe, imageUrl: artists.imageUrl }).from(artists).where(eq(artists.id, headliner.id)).limit(1);
   if (artistRow && !artistRow.imageUrl) {
-    const found = await findArtistImage(parsedTitle.artistNames[0]);
-    if (found) {
-      await db
-        .update(artists)
-        .set({ imageUrl: found.imageUrl, imageCredit: found.imageCredit, imageLicense: found.imageLicense })
-        .where(eq(artists.id, headliner.id));
+    const [existingSuggestion] = await db
+      .select({ id: reviewQueue.id })
+      .from(reviewQueue)
+      .where(and(eq(reviewQueue.kind, "artist_image_suggestion"), eq(reviewQueue.relatedArtistId, headliner.id)))
+      .limit(1);
+
+    if (!existingSuggestion) {
+      const found = await findArtistImage(parsedTitle.artistNames[0]);
+      if (found?.confidence === "exact") {
+        await db
+          .update(artists)
+          .set({ imageUrl: found.imageUrl, imageCredit: found.imageCredit, imageLicense: found.imageLicense })
+          .where(eq(artists.id, headliner.id));
+      } else if (found?.confidence === "search") {
+        await db.insert(reviewQueue).values({
+          kind: "artist_image_suggestion",
+          payload: {
+            artistName: artistRow.nameHe,
+            imageUrl: found.imageUrl,
+            imageCredit: found.imageCredit,
+            imageLicense: found.imageLicense,
+            matchedTitle: found.matchedTitle,
+          },
+          relatedArtistId: headliner.id,
+          createdBy: "pipeline",
+        });
+      }
     }
   }
 

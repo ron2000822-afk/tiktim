@@ -84,6 +84,7 @@ export const reviewKindEnum = pgEnum("review_kind", [
   "submission",
   "error_report",
   "low_confidence_event",
+  "artist_image_suggestion",
 ]);
 
 export const reviewStatusEnum = pgEnum("review_status", [

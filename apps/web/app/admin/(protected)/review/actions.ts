@@ -109,6 +109,21 @@ export async function publishLowConfidenceEvent(queueId: string, eventId: string
   revalidatePath("/admin/events");
 }
 
+export async function approveArtistImageSuggestion(
+  queueId: string,
+  artistId: string,
+  payload: { imageUrl: string; imageCredit: string; imageLicense: string },
+) {
+  const uid = await assertAdmin();
+  await db
+    .update(artists)
+    .set({ imageUrl: payload.imageUrl, imageCredit: payload.imageCredit, imageLicense: payload.imageLicense })
+    .where(eq(artists.id, artistId));
+  await resolveQueueEntry(queueId, uid, { action: "image_applied" });
+  revalidatePath("/admin/review");
+  revalidatePath("/admin/artists");
+}
+
 export async function resolveErrorReport(id: string, status: "fixed" | "dismissed") {
   await assertAdmin();
   await db.update(errorReports).set({ status }).where(eq(errorReports.id, id));
