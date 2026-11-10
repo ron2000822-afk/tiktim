@@ -99,6 +99,60 @@ describe("findArtistImage", () => {
     expect(result).toBeNull();
   });
 
+  it("rejects a page image from a disambiguation/name-list page rather than an unrelated photo", async () => {
+    // Confirmed live: the real artist "Nasrin" matched a Wikipedia page
+    // titled "Nasrin" that's a "Name list" page, not about her — its page
+    // image was an unrelated flower photo. The formal __DISAMBIG__ flag
+    // didn't catch it; the Wikidata short description did.
+    fetchWithRetryMock.mockImplementation(async (url: string) => {
+      if (url.includes("he.wikipedia.org")) {
+        return jsonResponse({ query: { pages: { "-1": {} } } });
+      }
+      if (url.includes("en.wikipedia.org")) {
+        return jsonResponse({
+          query: {
+            pages: {
+              "1": {
+                original: { source: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Rosa_acicularis.jpg" },
+                pageprops: { "wikibase-shortdesc": "Name list" },
+              },
+            },
+          },
+        });
+      }
+      throw new Error(`unexpected url: ${url}`);
+    });
+
+    const result = await findArtistImage("Nasrin");
+
+    expect(result).toBeNull();
+  });
+
+  it("rejects a page image from a formally-flagged MediaWiki disambiguation page", async () => {
+    fetchWithRetryMock.mockImplementation(async (url: string) => {
+      if (url.includes("he.wikipedia.org")) {
+        return jsonResponse({ query: { pages: { "-1": {} } } });
+      }
+      if (url.includes("en.wikipedia.org")) {
+        return jsonResponse({
+          query: {
+            pages: {
+              "1": {
+                original: { source: "https://upload.wikimedia.org/wikipedia/commons/x/xx/Unrelated.jpg" },
+                pageprops: { disambiguation: "" },
+              },
+            },
+          },
+        });
+      }
+      throw new Error(`unexpected url: ${url}`);
+    });
+
+    const result = await findArtistImage("Some Ambiguous Name");
+
+    expect(result).toBeNull();
+  });
+
   it("returns null (never throws) when the underlying fetch fails", async () => {
     fetchWithRetryMock.mockImplementation(async () => {
       throw new Error("network down");

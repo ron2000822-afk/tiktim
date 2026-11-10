@@ -9,17 +9,39 @@ export type ArtistImageResult = { imageUrl: string; imageCredit: string; imageLi
 
 type WikiPageImageResponse = {
   query?: {
-    pages?: Record<string, { original?: { source?: string } }>;
+    pages?: Record<
+      string,
+      {
+        original?: { source?: string };
+        pageprops?: { disambiguation?: string; "wikibase-shortdesc"?: string };
+      }
+    >;
   };
 };
 
+// Confirmed live: the artist "Nasrin" matched a Wikipedia page titled
+// "Nasrin" that isn't about her at all — it's a "Name list" page (a list
+// of unrelated people/things sharing that name), and its page image was
+// an unrelated flower photo. MediaWiki's formal disambiguation flag
+// didn't catch this one (it's not tagged __DISAMBIG__), but Wikidata's
+// short description did ("Name list") — checking both together catches
+// real disambiguation pages and this kind of list page.
+const NON_PERSON_SHORTDESC = /name list|given name|surname|disambiguation/i;
+
 async function getPageImage(wiki: "he" | "en", title: string): Promise<string | null> {
-  const url = `https://${wiki}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&piprop=original&titles=${encodeURIComponent(title)}&redirects=1`;
+  const url = `https://${wiki}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages|pageprops&piprop=original&titles=${encodeURIComponent(title)}&redirects=1`;
   const res = await fetchWithRetry(url, { rateLimiter });
   if (!res.ok) return null;
   const data = (await res.json()) as WikiPageImageResponse;
   const page = Object.values(data.query?.pages ?? {})[0];
-  return page?.original?.source ?? null;
+  if (!page) return null;
+
+  const shortdesc = page.pageprops?.["wikibase-shortdesc"];
+  if (page.pageprops?.disambiguation !== undefined || (shortdesc && NON_PERSON_SHORTDESC.test(shortdesc))) {
+    return null;
+  }
+
+  return page.original?.source ?? null;
 }
 
 type CommonsImageInfoResponse = {
