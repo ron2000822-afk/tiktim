@@ -28,6 +28,15 @@ type WikiPageImageResponse = {
 // real disambiguation pages and this kind of list page.
 const NON_PERSON_SHORTDESC = /name list|given name|surname|disambiguation/i;
 
+// Tried a Wikipedia-search-based fallback for names that don't exactly
+// match a page title (e.g. "Hanan Yovel" has no Hebrew Wikipedia page
+// under that exact Latin-script title). Reverted — verified live that
+// the top search result is unreliable enough to actively cause harm:
+// "Shai Zalman" matched "Shneur Zalman of Liadi" (an 18th-century rabbi),
+// "Maor Cohen" matched a TV show page, "Tamir Greenberg" matched a
+// different historical poet. A wrong photo confidently shown under a
+// real artist's name is worse than no photo — exact-title matching only,
+// same as the disambiguation lesson from "Nasrin".
 async function getPageImage(wiki: "he" | "en", title: string): Promise<string | null> {
   const url = `https://${wiki}.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages|pageprops&piprop=original&titles=${encodeURIComponent(title)}&redirects=1`;
   const res = await fetchWithRetry(url, { rateLimiter });
@@ -81,7 +90,12 @@ async function getImageAttribution(imageUrl: string): Promise<{ credit: string; 
   // the licensing metadata, since that's never included in the pageimages
   // response itself.
   const pathOnly = imageUrl.split("?")[0];
-  const match = pathOnly.match(/\/([^/]+\.(?:jpg|jpeg|png|svg|gif))$/i);
+  // Confirmed live: "Miri Mesika"'s page image is a .webp file — the
+  // original list (jpg/jpeg/png/svg/gif) silently dropped every webp
+  // match, failing the whole lookup even though a perfectly good, found
+  // image existed. Added tif/tiff too for the same reason — Commons
+  // allows both, even if rare for this use case.
+  const match = pathOnly.match(/\/([^/]+\.(?:jpg|jpeg|png|svg|gif|webp|tif|tiff))$/i);
   if (!match) return null;
   const fileTitle = `File:${decodeURIComponent(match[1])}`;
 
