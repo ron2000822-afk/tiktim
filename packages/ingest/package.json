@@ -23,6 +23,7 @@
     "@tiktim/db": "workspace:*",
     "@tiktim/shared": "workspace:*",
     "drizzle-orm": "^0.36.0",
+    "playwright": "^1.49.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

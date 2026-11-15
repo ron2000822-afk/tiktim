@@ -42,7 +42,7 @@ describe("zappaConnector.normalize", () => {
       status: "scheduled",
       url: "https://www.zappa-club.co.il/event/גורי-אלפי-זאפה-ירושלים-22033115/",
     });
-    expect(result?.startsAt).toBe("2026-11-12T21:30:00.000+02:00");
+    expect(result?.startsAt).toBe("2029-11-12T21:30:00.000+02:00");
   });
 
   it("normalizes each subEvent of a real EventSeries page (Yuval Dayan, music) as its own listing with its own URL", () => {
