@@ -32,6 +32,40 @@ export async function openBrowserSession(opts: { minIntervalMs: number; userAgen
   };
 }
 
+/**
+ * Some sites' real data never appears in rendered HTML at all — the page is a
+ * thin SPA shell that calls its own JSON API client-side (confirmed live:
+ * barby.co.il's homepage fires `/api/shows/find`, which returns the full
+ * upcoming-shows list already structured — far more reliable than scraping
+ * rendered card markup). The API itself answers 403 to a plain fetch (same
+ * Cloudflare bot-check as the HTML), so it must be captured from inside a
+ * real page load, which carries a valid Cloudflare clearance cookie.
+ * Returns the first response whose URL matches `urlIncludes`, parsed as
+ * JSON — or null if no matching response arrives before `timeoutMs`.
+ */
+export async function captureJsonResponse(
+  session: BrowserSession,
+  pageUrl: string,
+  urlIncludes: string,
+  opts: { timeoutMs?: number } = {},
+): Promise<unknown | null> {
+  const timeoutMs = opts.timeoutMs ?? 30000;
+  await session.rateLimiter.wait();
+
+  const page = await session.context.newPage();
+  try {
+    const responsePromise = page
+      .waitForResponse((res) => res.url().includes(urlIncludes), { timeout: timeoutMs })
+      .catch(() => null);
+    await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs }).catch(() => null);
+    const response = await responsePromise;
+    if (!response) return null;
+    return await response.json().catch(() => null);
+  } finally {
+    await page.close();
+  }
+}
+
 /** Navigates to `url` in a fresh tab, waits for client-side rendering to settle, and returns the fully rendered HTML — or null on any failure (never throws). */
 export async function fetchRenderedHtml(
   session: BrowserSession,

@@ -5,6 +5,7 @@ import { grayclubConnector } from "./grayclub";
 import { comyConnector } from "./comy";
 import { zappaConnector } from "./zappa";
 import { eventimConnector } from "./eventim";
+import { barbyConnector } from "./barby";
 
 // Tier 3 connectors default to sources.is_active = false on creation (see
 // ensureSource in pipeline/run.ts) and runPipeline skips inactive sources —
@@ -18,6 +19,7 @@ export const connectors: Connector[] = [
   comyConnector,
   zappaConnector,
   eventimConnector,
+  barbyConnector,
 ];
 
 export function getConnector(slug: string): Connector | undefined {
