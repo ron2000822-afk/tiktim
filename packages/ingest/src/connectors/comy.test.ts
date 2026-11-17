@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { comyConnector, discoverArtistPageUrls, extractPerformances, guessCityFromVenueName, resolveDate } from "./comy";
+import { comyConnector, discoverArtistPageUrls, extractPerformances, resolveDate } from "./comy";
 
 const FIXTURE_DIR = join(__dirname, "__fixtures__/comy");
 
@@ -58,22 +58,6 @@ describe("extractPerformances", () => {
 
   it("returns an empty array when the page has no h1 (not a real artist page)", () => {
     expect(extractPerformances("<html><body>no artist here</body></html>")).toEqual([]);
-  });
-});
-
-describe("guessCityFromVenueName", () => {
-  it("finds a seeded city name embedded in the venue string", () => {
-    expect(guessCityFromVenueName("היכל התרבות פתח תקווה")).toBe("פתח תקווה");
-    expect(guessCityFromVenueName("אודיטוריום ספיר - כפר סבא")).toBe("כפר סבא");
-  });
-
-  it("prefers the longer city name when a shorter one would also match", () => {
-    // "תל אביב-יפו" contains "תל אביב" as a substring — must not stop early.
-    expect(guessCityFromVenueName("בית החייל - תל אביב")).toBe("תל אביב");
-  });
-
-  it("returns undefined for a venue in a town we haven't seeded", () => {
-    expect(guessCityFromVenueName("כפר ויתקין")).toBeUndefined();
   });
 });
 

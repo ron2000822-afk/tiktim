@@ -1,10 +1,10 @@
 import { getJerusalemYMD, zonedTimeToUtc } from "@tiktim/shared";
-import { CITIES } from "@tiktim/db/seed-data";
 import { RateLimiter, fetchWithRetry } from "../lib/http";
 import type { Connector, NormalizedListing, RawItem } from "./types";
 import { isAllowedByRobots, getCrawlDelayMs } from "./_seller-base/robots";
 import { validateListing } from "./_seller-base/validate-listing";
 import { decodeHtmlEntities } from "./_seller-base/decode-html-entities";
+import { guessCityFromVenueName } from "./_seller-base/guess-city";
 
 const ORIGIN = "https://comy.co.il";
 const SOURCE_DOMAIN = "comy.co.il";
@@ -119,17 +119,6 @@ export function resolveDate(day: number, month: number, hour: number, minute: nu
   return null;
 }
 
-// Merged municipalities ("תל אביב-יפו", "מודיעין-מכבים-רעות") are almost
-// always called by just their first segment colloquially — a venue saying
-// plain "תל אביב" should still resolve, not just the full official name.
-const CITY_NAME_CANDIDATES = Array.from(
-  new Set(CITIES.flatMap((c) => (c.nameHe.includes("-") ? [c.nameHe, c.nameHe.split("-")[0]] : [c.nameHe]))),
-).sort((a, b) => b.length - a.length);
-
-/** Venue names here embed the city with no separate field (e.g. "היכל התרבות פתח תקווה") — best-effort substring match against our seeded city list; venues in towns we haven't seeded fall back to review via validateListing's missing-city rejection. */
-export function guessCityFromVenueName(venueName: string): string | undefined {
-  return CITY_NAME_CANDIDATES.find((cityName) => venueName.includes(cityName));
-}
 
 export const comyConnector: Connector = {
   slug: "comy",
