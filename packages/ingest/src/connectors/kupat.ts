@@ -76,6 +76,16 @@ type VenuesApiResponse = {
   meta: { pagination: { pageCount: number } };
 };
 
+// The API sometimes sends the literal string "null" for Min_Price/Max_Price
+// instead of omitting the field or sending JSON null (confirmed live: two
+// real events crashed Postgres's numeric cast on exactly this value).
+function toPrice(value: unknown): number | undefined {
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value !== "string") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function matchesAnyKeyword(title: string, keywords: string[]): boolean {
   const lower = title.toLowerCase();
   return keywords.some((keyword) => lower.includes(keyword.toLowerCase()));
@@ -153,8 +163,8 @@ export const kupatConnector: Connector = {
       cityName: guessCityFromVenueName(venueName),
       startsAt: startsAt.toISOString(),
       categoryHint: matchesAnyKeyword(title, STANDUP_KEYWORDS) ? "standup" : "music",
-      priceMin: event.Min_Price,
-      priceMax: event.Max_Price,
+      priceMin: toPrice(event.Min_Price),
+      priceMax: toPrice(event.Max_Price),
       currency: "ILS",
       availability: event.Soldout ? "sold_out" : "available",
       status: "scheduled",

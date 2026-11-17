@@ -95,6 +95,14 @@ describe("kupatConnector.normalize", () => {
     expect(result).toBeNull();
   });
 
+  it("treats the literal string \"null\" for a price field as absent instead of crashing", () => {
+    // Confirmed live: the real API sometimes sends this instead of omitting the field.
+    const event = makeEvent({ Min_Price: "null" as unknown as number, Max_Price: "null" as unknown as number });
+    const result = kupatConnector.normalize({ externalId: "55059", payload: makeRaw(event) });
+    expect(result?.priceMin).toBeUndefined();
+    expect(result?.priceMax).toBeUndefined();
+  });
+
   it("rejects an event with an unparseable date", () => {
     const event = makeEvent({ Date_Time: "garbage" });
     const result = kupatConnector.normalize({ externalId: "55059", payload: makeRaw(event) });
