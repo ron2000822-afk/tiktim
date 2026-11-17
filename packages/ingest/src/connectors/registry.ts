@@ -7,6 +7,7 @@ import { zappaConnector } from "./zappa";
 import { eventimConnector } from "./eventim";
 import { barbyConnector } from "./barby";
 import { kupatConnector } from "./kupat";
+import { tomixConnector } from "./tomix";
 
 // Tier 3 connectors default to sources.is_active = false on creation (see
 // ensureSource in pipeline/run.ts) and runPipeline skips inactive sources —
@@ -22,6 +23,7 @@ export const connectors: Connector[] = [
   eventimConnector,
   barbyConnector,
   kupatConnector,
+  tomixConnector,
 ];
 
 export function getConnector(slug: string): Connector | undefined {
