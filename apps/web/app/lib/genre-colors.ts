@@ -20,7 +20,11 @@ const KNOWN_GENRE_SLUGS = new Set([
   "open-mic",
 ]);
 
+export function isKnownGenre(genreSlug: string | null | undefined): genreSlug is string {
+  return !!genreSlug && KNOWN_GENRE_SLUGS.has(genreSlug);
+}
+
 export function genreTintVar(genreSlug: string | null | undefined): string {
-  if (genreSlug && KNOWN_GENRE_SLUGS.has(genreSlug)) return `var(--genre-${genreSlug})`;
+  if (isKnownGenre(genreSlug)) return `var(--genre-${genreSlug})`;
   return "var(--accent)";
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import Link from "next/link";
 import { formatHebrewDayDate, formatPriceFrom } from "@tiktim/shared";
-import { genreTintVar } from "@/app/lib/genre-colors";
+import { artistPosterStyle } from "@/app/lib/artist-poster";
 import { EVENT_CARD_COPY, HERO_CAROUSEL_COPY } from "@/app/lib/copy/site";
 import type { EventCardData } from "@/lib/queries/events";
 
@@ -38,6 +38,7 @@ export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardDa
   // artist's Wikimedia Commons photo, which needs its own credit line.
   const displayImageUrl = event.imageUrl ?? event.artistImageUrl;
   const isArtistFallbackImage = !event.imageUrl && !!event.artistImageUrl;
+  const poster = displayImageUrl ? null : artistPosterStyle(event.artistNameHe, event.genreSlug);
 
   function goTo(next: number) {
     setIndex(((next % events.length) + events.length) % events.length);
@@ -108,7 +109,7 @@ export function HeroCarousel({ events, sponsoredEventId }: { events: EventCardDa
         style={
           displayImageUrl
             ? { backgroundImage: `url(${displayImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : { background: `linear-gradient(135deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }
+            : { background: poster!.background }
         }
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" aria-hidden="true" />

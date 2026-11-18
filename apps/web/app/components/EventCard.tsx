@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatHebrewDayDate, formatPriceFrom } from "@tiktim/shared";
-import { genreTintVar } from "@/app/lib/genre-colors";
+import { artistPosterStyle } from "@/app/lib/artist-poster";
 import { EVENT_CARD_COPY } from "@/app/lib/copy/site";
 import type { EventCardData } from "@/lib/queries/events";
 import { SaveHeart } from "./SaveHeart";
@@ -23,6 +23,7 @@ export function EventCard({
   // license terms, unlike a seller-provided event photo.
   const displayImageUrl = event.imageUrl ?? event.artistImageUrl;
   const isArtistFallbackImage = !event.imageUrl && !!event.artistImageUrl;
+  const poster = displayImageUrl ? null : artistPosterStyle(event.artistNameHe, event.genreSlug);
 
   return (
     <article className={`relative ${variant === "rail" ? "w-56 shrink-0 snap-start sm:w-64" : ""}`}>
@@ -45,13 +46,21 @@ export function EventCard({
           style={
             displayImageUrl
               ? { backgroundImage: `url(${displayImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-              : { background: `linear-gradient(160deg, ${genreTintVar(event.genreSlug)}, var(--surface-2))` }
+              : { background: poster!.background }
           }
         >
-          {!displayImageUrl && (
-            <span className="text-2xl font-extrabold leading-tight text-[var(--text)]">
-              {event.artistNameHe}
-            </span>
+          {poster && (
+            <>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-4 end-1 select-none text-[7rem] font-black leading-none text-white/10"
+              >
+                {poster.initial}
+              </span>
+              <span className="relative text-2xl font-extrabold leading-tight text-white drop-shadow-sm">
+                {event.artistNameHe}
+              </span>
+            </>
           )}
           {isArtistFallbackImage && event.artistImageCredit && (
             <span className="absolute bottom-1 start-1 rounded bg-black/50 px-1 text-[10px] text-[var(--text)]">
