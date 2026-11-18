@@ -38,6 +38,31 @@ export type PipelineReport = {
 };
 
 const PUBLISH_CONFIDENCE_THRESHOLD = 0.85;
+
+// Entity-resolution novelty is NOT factual uncertainty, and conflating the
+// two is what kept ~43% of real upcoming inventory off the site (confirmed
+// live: אייל גולן, הדג נחש and תיסלם were all held back purely for having a
+// new artist row). By the time we get here the listing has already passed
+// validateListing — title, future start time, venue, city, price sanity and
+// a URL on the source's own domain. Creating a new artist/venue row affects
+// how events are GROUPED onto artist and venue pages; it says nothing about
+// whether the show is real.
+//
+// The one case that genuinely risks showing wrong facts is attaching an
+// event to the WRONG EXISTING artist, so that alone stays below the publish
+// threshold. Everything else is queued for review but published meanwhile.
+const ARTIST_CONFIDENCE = {
+  /** Fresh artist, nothing similar to confuse it with — the safest case there is. */
+  newArtist: 0.95,
+  /** Similar names existed but AI declined to pick one, so we made a new row. Worst case is a duplicate artist to merge later, not a wrong fact. */
+  newArtistDespiteCandidates: 0.9,
+  /** AI picked an existing artist out of several. This one can genuinely be wrong — hold it. */
+  aiDisambiguated: 0.6,
+} as const;
+
+/** A venue row we just created from the seller's own venue string. Same reasoning as a new artist: grouping, not facts. */
+const UNVERIFIED_VENUE_CONFIDENCE = 0.9;
+
 const BASE62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 function randomShortId(): string {
@@ -134,11 +159,11 @@ export async function processListing(
         await db.insert(reviewQueue).values({
           kind: "unmatched_artist",
           payload: { rawName: name, aiPickedArtistId: aiPick, candidates: decision.topCandidates },
-          confidence: 0.6,
+          confidence: ARTIST_CONFIDENCE.aiDisambiguated,
           relatedArtistId: aiPick,
           createdBy: "pipeline",
         });
-        resolvedArtistIds.push({ id: aiPick, confidence: 0.6, wasUnverified: false });
+        resolvedArtistIds.push({ id: aiPick, confidence: ARTIST_CONFIDENCE.aiDisambiguated, wasUnverified: false });
       } else {
         const newId = await createUnverifiedArtist(name);
         await db.insert(reviewQueue).values({
@@ -147,7 +172,7 @@ export async function processListing(
           relatedArtistId: newId,
           createdBy: "pipeline",
         });
-        resolvedArtistIds.push({ id: newId, confidence: 0.5, wasUnverified: true });
+        resolvedArtistIds.push({ id: newId, confidence: ARTIST_CONFIDENCE.newArtistDespiteCandidates, wasUnverified: true });
       }
     } else {
       const newId = await createUnverifiedArtist(name);
@@ -157,7 +182,7 @@ export async function processListing(
         relatedArtistId: newId,
         createdBy: "pipeline",
       });
-      resolvedArtistIds.push({ id: newId, confidence: 0.5, wasUnverified: true });
+      resolvedArtistIds.push({ id: newId, confidence: ARTIST_CONFIDENCE.newArtist, wasUnverified: true });
     }
   }
 
@@ -190,7 +215,7 @@ export async function processListing(
     await db.update(events).set({ lastSeenAt: now }).where(eq(events.id, eventId));
     result = "merged";
   } else {
-    const confidence = Math.min(headliner.confidence, venueWasUnverified ? 0.5 : 1);
+    const confidence = Math.min(headliner.confidence, venueWasUnverified ? UNVERIFIED_VENUE_CONFIDENCE : 1);
     const shouldPublish = confidence >= PUBLISH_CONFIDENCE_THRESHOLD;
 
     const [created] = await db
