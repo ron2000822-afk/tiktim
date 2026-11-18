@@ -99,7 +99,14 @@ export function createEventimConnector(config: EventimConnectorConfig): Connecto
         const pagePath = new URL(pageUrl).pathname;
         if (!(await isAllowedByRobots(origin, pagePath))) continue;
 
-        const html = await fetchRenderedHtml(session, pageUrl);
+        // Wait for the JSON-LD block specifically, not networkidle: these
+        // pages keep analytics sockets open so networkidle never settles and
+        // every page burns the full timeout, while the data we want is in the
+        // server-rendered HTML and is there immediately.
+        const html = await fetchRenderedHtml(session, pageUrl, {
+          waitForSelector: 'script[type="application/ld+json"]',
+          timeoutMs: 20000,
+        });
         if (!html) continue;
 
         // One page can yield several listings: an EventSeries artist page
