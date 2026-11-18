@@ -1,12 +1,12 @@
-import { RateLimiter, fetchWithRetry } from "../../lib/http";
+import { RateLimiter } from "../../lib/http";
 import type { Connector, NormalizedListing, RawItem } from "../types";
 import { isAllowedByRobots, getCrawlDelayMs } from "./robots";
 import { validateListing } from "./validate-listing";
 import { extractEventJsonLd, extractPriceRange, mapJsonLdEventToListingFields } from "./extract-jsonld";
 import { fetchGzippedXml } from "./fetch-gzip-xml";
+import { openBrowserSession, fetchRenderedHtml } from "./browser-fetch";
 
 const DEFAULT_INTERVAL_MS = 2500;
-const MAX_CONSECUTIVE_FORBIDDEN = 3;
 
 // Confirmed live: this Eventim-platform tags virtually everything
 // "MusicEvent" regardless of true genre (a real stand-up comedian's show
@@ -71,7 +71,8 @@ export function createEventimConnector(config: EventimConnectorConfig): Connecto
 
     async *fetch(opts) {
       const origin = new URL(ORIGIN).origin;
-      const rateLimiter = new RateLimiter((await getCrawlDelayMs(origin)) ?? DEFAULT_INTERVAL_MS);
+      const crawlDelayMs = (await getCrawlDelayMs(origin)) ?? DEFAULT_INTERVAL_MS;
+      const rateLimiter = new RateLimiter(crawlDelayMs);
 
       const pageUrls: string[] = [];
       for (const sitemapUrl of SITEMAP_URLS) {
@@ -83,27 +84,24 @@ export function createEventimConnector(config: EventimConnectorConfig): Connecto
         pageUrls.push(...discoverUrlsFromSitemap(xml));
       }
 
+      // The Eventim platform's WAF rejects every non-headful client —
+      // plain fetch over HTTP/2 and HTTP/1.1, bundled Chromium headless and
+      // real Chrome headless all fail, while real Chrome headful succeeds
+      // from the same machine and IP. The gzipped sitemaps above are served
+      // as static files and are exempt, so only the event pages need this.
+      const session = await openBrowserSession({ minIntervalMs: crawlDelayMs, headful: true });
       let emitted = 0;
-      let consecutiveForbidden = 0;
 
+      try {
       for (const pageUrl of pageUrls) {
         if (opts.limit && emitted >= opts.limit) return;
 
         const pagePath = new URL(pageUrl).pathname;
         if (!(await isAllowedByRobots(origin, pagePath))) continue;
 
-        const response = await fetchWithRetry(pageUrl, { signal: opts.signal, rateLimiter, maxRetries: 1 });
-        if (response.status === 403) {
-          consecutiveForbidden++;
-          if (consecutiveForbidden >= MAX_CONSECUTIVE_FORBIDDEN) {
-            throw new Error(`${MAX_CONSECUTIVE_FORBIDDEN} consecutive 403s from ${origin} — stopping this source's run`);
-          }
-          continue;
-        }
-        consecutiveForbidden = 0;
-        if (!response.ok) continue;
+        const html = await fetchRenderedHtml(session, pageUrl);
+        if (!html) continue;
 
-        const html = await response.text();
         // One page can yield several listings: an EventSeries artist page
         // embeds every upcoming performance as its own subEvent node, each
         // with its own offer.url pointing at its specific /event/ page —
@@ -121,6 +119,9 @@ export function createEventimConnector(config: EventimConnectorConfig): Connecto
           emitted++;
           yield { externalId, payload: { ...event, _sourceUrl: eventUrl } };
         }
+      }
+      } finally {
+        await session.close();
       }
     },
 

@@ -6,6 +6,7 @@ type RobotsRules = {
 };
 
 const cache = new Map<string, RobotsRules>();
+const ROBOTS_TIMEOUT_MS = 10000;
 
 function parseRobotsTxt(text: string): RobotsRules {
   const disallow: string[] = [];
@@ -38,10 +39,20 @@ async function getRobotsRules(origin: string): Promise<RobotsRules> {
 
   let rules: RobotsRules = { disallow: [], crawlDelayMs: null };
   try {
-    const response = await fetchWithRetry(`${origin}/robots.txt`, { maxRetries: 1 });
+    // Hard deadline, not just a retry cap. A host that resets the HTTP/2
+    // stream rather than refusing cleanly leaves the underlying fetch hanging
+    // instead of throwing, and because every connector calls this before its
+    // first page, one such host stalls that source's entire run with no
+    // output at all (confirmed live: zappa-club.co.il, which WAFs even
+    // /robots.txt, sat here past 120s).
+    const response = await fetchWithRetry(`${origin}/robots.txt`, {
+      maxRetries: 1,
+      signal: AbortSignal.timeout(ROBOTS_TIMEOUT_MS),
+    });
     if (response.ok) rules = parseRobotsTxt(await response.text());
   } catch {
-    // No robots.txt or unreachable — default to allow, same as most crawlers.
+    // No robots.txt, unreachable, or timed out — default to allow, same as
+    // most crawlers. Rate limiting still applies via the caller's limiter.
   }
 
   cache.set(origin, rules);

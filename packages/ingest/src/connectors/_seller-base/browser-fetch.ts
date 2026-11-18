@@ -17,8 +17,26 @@ export type BrowserSession = {
  * returns an HTTP/2 stream reset to a plain curl/fetch request even from a
  * real Israeli IP, but completes normally for an actual browser).
  */
-export async function openBrowserSession(opts: { minIntervalMs: number; userAgent?: string }): Promise<BrowserSession> {
-  const browser: Browser = await chromium.launch({ headless: true });
+export async function openBrowserSession(opts: {
+  minIntervalMs: number;
+  userAgent?: string;
+  /**
+   * Drive a real, visible Chrome instead of bundled headless Chromium.
+   *
+   * Some WAFs fingerprint headless mode specifically. Confirmed live on
+   * zappa-club.co.il and eventim.co.il: bundled Chromium headless AND real
+   * Chrome headless both die with ERR_HTTP2_PROTOCOL_ERROR, while real
+   * Chrome headful returns 200 — same machine, same IP, same moment. The
+   * difference is the headless fingerprint, not the network or the address.
+   *
+   * The cost is that this needs a display: fine locally, but CI must run it
+   * under a virtual framebuffer (xvfb-run) or the launch fails outright.
+   */
+  headful?: boolean;
+}): Promise<BrowserSession> {
+  const browser: Browser = opts.headful
+    ? await chromium.launch({ headless: false, channel: "chrome" })
+    : await chromium.launch({ headless: true });
   const context = await browser.newContext(opts.userAgent ? { userAgent: opts.userAgent } : {});
   const rateLimiter = new RateLimiter(opts.minIntervalMs);
 
