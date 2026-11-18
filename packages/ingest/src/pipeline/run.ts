@@ -212,7 +212,16 @@ export async function processListing(
 
   if (matchDecision.kind === "merge") {
     eventId = matchDecision.eventId;
-    await db.update(events).set({ lastSeenAt: now }).where(eq(events.id, eventId));
+    // Fill in artwork a source only started supplying later, without ever
+    // overwriting an image an event already has — re-running ingestion
+    // should enrich existing rows, not churn them.
+    await db
+      .update(events)
+      .set({
+        lastSeenAt: now,
+        ...(listing.imageUrl ? { imageUrl: sql`coalesce(${events.imageUrl}, ${listing.imageUrl})` } : {}),
+      })
+      .where(eq(events.id, eventId));
     result = "merged";
   } else {
     const confidence = Math.min(headliner.confidence, venueWasUnverified ? UNVERIFIED_VENUE_CONFIDENCE : 1);
@@ -606,13 +615,24 @@ export async function markPastEvents(): Promise<number> {
 // particular falls back to a generic venue/placeholder image for many
 // listings, and the same URL ends up attached to dozens of unrelated
 // events (one placeholder was shared by 41 real events in production).
-// A single reused photo looks worse than the card's own gradient
-// fallback, so anything shared by more than a couple of events gets
-// treated as "no real image" rather than shown.
+// A single reused photo looks worse than the card's own generated poster,
+// so a generic image is treated as "no real image" rather than shown.
+//
+// Reuse alone can't be the test, though: a tour poster is legitimately the
+// same image across every date of that run, and some sellers only publish
+// artwork per artist rather than per date (comy's og:image, barby's
+// showImage). Counting DISTINCT HEADLINE ARTISTS instead of events keeps
+// those — one artist's poster on fifteen of their own shows is correct,
+// while the same file spanning several unrelated artists is a placeholder.
 export async function declassifyGenericImages(): Promise<number> {
   const result = await db.execute<{ id: string }>(sql`
     with generic as (
-      select image_url from events where image_url is not null group by image_url having count(*) > 2
+      select e.image_url
+      from events e
+      join event_artists ea on ea.event_id = e.id and ea.role = 'headliner'
+      where e.image_url is not null
+      group by e.image_url
+      having count(distinct ea.artist_id) > 2
     )
     update events set image_url = null where image_url in (select image_url from generic)
     returning id

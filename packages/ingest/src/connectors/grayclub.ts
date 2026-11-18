@@ -3,6 +3,7 @@ import type { Connector, NormalizedListing, RawItem } from "./types";
 import { createSellerSiteFetch, type SitemapEntry } from "./_seller-base/seller-site-connector";
 import { validateListing } from "./_seller-base/validate-listing";
 import { decodeHtmlEntities } from "./_seller-base/decode-html-entities";
+import { extractOgImage } from "./_seller-base/extract-og-image";
 
 const ORIGIN = "https://grayclub.co.il";
 const SOURCE_DOMAIN = "grayclub.co.il";
@@ -24,6 +25,7 @@ type GrayClubEventData = {
   doorsTime?: string; // "20:00"
   startTime?: string; // "22:00"
   address?: string;
+  imageUrl?: string;
   _sourceUrl: string;
 };
 
@@ -62,6 +64,7 @@ export function extractPayload(html: string, entry: SitemapEntry): unknown | nul
     doorsTime: doorsMatch?.[1]?.trim(),
     startTime: startMatch?.[1]?.trim(),
     address: addressMatch ? decodeHtmlEntities(addressMatch[1]).trim() : undefined,
+    imageUrl: extractOgImage(html, entry.url),
     _sourceUrl: entry.url,
   };
   return data;
@@ -125,6 +128,7 @@ export const grayclubConnector: Connector = {
       currency: "ILS",
       availability: "available",
       status: "scheduled",
+      imageUrl: data.imageUrl,
       url: data._sourceUrl,
     };
 

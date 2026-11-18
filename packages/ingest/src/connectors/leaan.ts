@@ -19,8 +19,20 @@ type LeaanEventData = {
   categories?: Record<string, { category_id: string; category_name: string }>;
   active?: boolean;
   sold_out?: boolean;
+  // The event artwork leaan serves. The flat field and the responsive
+  // variants aren't always both populated, so fall back between them.
+  vivenu_image?: string;
+  images?: { desktop?: { vivenu_image?: string }; mobile?: { vivenu_image?: string } };
   _sourceUrl: string;
 };
+
+function pickLeaanImage(data: LeaanEventData): string | undefined {
+  const candidate =
+    data.vivenu_image ||
+    data.images?.desktop?.vivenu_image ||
+    data.images?.mobile?.vivenu_image;
+  return candidate?.startsWith("http") ? candidate : undefined;
+}
 
 function discoverEntries(sitemapXml: string): SitemapEntry[] {
   const entries: SitemapEntry[] = [];
@@ -109,6 +121,7 @@ export const leaanConnector: Connector = {
       currency: "ILS",
       availability: data.sold_out ? "sold_out" : "available",
       status: "scheduled",
+      imageUrl: pickLeaanImage(data),
       url: data._sourceUrl,
     };
 

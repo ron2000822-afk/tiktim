@@ -3,6 +3,7 @@ import type { Connector, NormalizedListing, RawItem } from "./types";
 import { isAllowedByRobots } from "./_seller-base/robots";
 import { validateListing } from "./_seller-base/validate-listing";
 import { decodeHtmlEntities } from "./_seller-base/decode-html-entities";
+import { extractOgImage } from "./_seller-base/extract-og-image";
 import { openBrowserSession, fetchRenderedHtml } from "./_seller-base/browser-fetch";
 import { guessCityFromVenueName } from "./_seller-base/guess-city";
 import { resolveDate } from "./comy";
@@ -45,6 +46,7 @@ export type TomixShowDetails = {
   hour: number;
   minute: number;
   venueName: string;
+  imageUrl?: string;
   url: string;
 };
 
@@ -90,6 +92,7 @@ export function extractShowDetails(html: string, url: string): TomixShowDetails 
     hour: Number(clockMatch[1]),
     minute: Number(clockMatch[2]),
     venueName: decodeHtmlEntities(placeMatch[1]).trim(),
+    imageUrl: extractOgImage(html, url),
     url,
   };
 }
@@ -160,6 +163,7 @@ export const tomixConnector: Connector = {
       cityName: guessCityFromVenueName(details.venueName),
       startsAt: startsAt.toISOString(),
       categoryHint: describedAsStandup(details.title) ? "standup" : "music",
+      imageUrl: details.imageUrl,
       currency: "ILS",
       availability: "available",
       status: "scheduled",

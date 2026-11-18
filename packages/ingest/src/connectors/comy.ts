@@ -4,6 +4,7 @@ import type { Connector, NormalizedListing, RawItem } from "./types";
 import { isAllowedByRobots, getCrawlDelayMs } from "./_seller-base/robots";
 import { validateListing } from "./_seller-base/validate-listing";
 import { decodeHtmlEntities } from "./_seller-base/decode-html-entities";
+import { extractOgImage } from "./_seller-base/extract-og-image";
 import { guessCityFromVenueName } from "./_seller-base/guess-city";
 
 const ORIGIN = "https://comy.co.il";
@@ -36,6 +37,7 @@ export type ComyPerformance = {
   minute: number;
   weekdayLetter: string;
   url: string;
+  imageUrl?: string;
 };
 
 /** comy.co.il is one page per artist/show, listing every upcoming performance date on that page — unlike the 1:1 "page = event" shape every other connector assumes. */
@@ -61,10 +63,13 @@ export function discoverArtistPageUrls(sitemapXml: string): string[] {
  * is day.month with no year — resolved later in normalize() using the
  * stated weekday as a cross-check.
  */
-export function extractPerformances(html: string): ComyPerformance[] {
+export function extractPerformances(html: string, pageUrl?: string): ComyPerformance[] {
   const h1Match = /<h1[^>]*>([^<]*)<\/h1>/.exec(html);
   const artistName = h1Match ? decodeHtmlEntities(h1Match[1]).trim() : undefined;
   if (!artistName) return [];
+
+  // One artist page = one poster, shared by every date on it.
+  const imageUrl = pageUrl ? extractOgImage(html, pageUrl) : undefined;
 
   const results: ComyPerformance[] = [];
   const blockRegex = /<a\s+href="([^"]*)"\s+class="single-page-event[^"]*">([\s\S]*?)<\/a>/g;
@@ -91,6 +96,7 @@ export function extractPerformances(html: string): ComyPerformance[] {
       hour: Number(timeMatch[2]),
       minute: Number(timeMatch[3]),
       url: href,
+      imageUrl,
     });
   }
   return results;
@@ -164,7 +170,7 @@ export const comyConnector: Connector = {
       if (!response.ok) continue;
 
       const html = await response.text();
-      for (const perf of extractPerformances(html)) {
+      for (const perf of extractPerformances(html, pageUrl)) {
         if (opts.limit && emitted >= opts.limit) return;
         const prsntId = new URL(perf.url).searchParams.get("prsntId");
         if (!prsntId) continue;
@@ -191,6 +197,7 @@ export const comyConnector: Connector = {
       cityName: guessCityFromVenueName(perf.venueName),
       startsAt: startsAt.toISOString(),
       categoryHint: CATEGORY_HINT,
+      imageUrl: perf.imageUrl,
       currency: "ILS",
       availability: "available",
       status: "scheduled",
